@@ -10,13 +10,19 @@ MSE <- function(a, b){
   return(norm(a - b, type="2")**2/len) 
 }
 
+# Professor suggested possibly increasing this to 6
 lambda_list <- seq(1, 4.5, length.out=300)
 10**(lambda_list)
 
 
 lambda <- 5
+<<<<<<< HEAD
 tau <- c(0.1)
 n <- 5000
+=======
+tau <- c(0.5)
+n <- 1000
+>>>>>>> 0ca003d1a4e61eb17fbb889c9db01a997580594e
 d <- 10
 
 
@@ -24,7 +30,11 @@ d <- 10
 ## prepare the inputs X, and the true function
 x <- seq(1, n, 1)
 
+<<<<<<< HEAD
 # get sceneria 1, 2, 3，6
+=======
+# get sceneria 1, 2, 3
+>>>>>>> 0ca003d1a4e61eb17fbb889c9db01a997580594e
 x <- x/n
 
 
@@ -49,13 +59,13 @@ x_j <- x # we could add permutation for different j.
 
 
 # scenerio 6
-get_g_j <- function(x_j, j){
-  g_0 <- (x_j + 0.1)*(j/10)
-  g_0_n <- norm(g_0, type="2")/sqrt(n)
-  a_j <- 1/g_0_n
-  g_0 <- a_j**(x_j + 0.1)*(j/10)
-  return(g_0)
-}
+# get_g_j <- function(x_j, j){
+#   g_0 <- (x_j + 0.1)*(j/10)
+#   g_0_n <- norm(g_0, type="2")/sqrt(n)
+#   a_j <- 1/g_0_n
+#   g_0 <- a_j**(x_j + 0.1)*(j/10)
+#   return(g_0)
+# }
 
 # scenerio 5
 # get_g_j <- function(x_j, j){
@@ -76,6 +86,7 @@ get_g_j <- function(x_j, j){
 #   return(g_0)
 # }
 
+<<<<<<< HEAD
 # # scenerio 1, 2, 3, Doppler-like
 # get_g_j <- function(x_j, j){
 #   g_0 <- sin(2*pi/(x_j + 0.1)**(j/10))
@@ -84,6 +95,16 @@ get_g_j <- function(x_j, j){
 #   g_0 <- a_j*sin(2*pi/(x_j + 0.1)**(j/10))
 #   return(g_0)
 # }
+=======
+# scenerio 1, 2, 3, Doppler-like
+get_g_j <- function(x_j, j){
+  g_0 <- sin(2*pi/(x_j + 0.1)**(j/10))
+  g_0_n <- norm(g_0, type="2")/sqrt(n)
+  a_j <- 1/g_0_n
+  g_0 <- a_j*sin(2*pi/(x_j + 0.1)**(j/10))
+  return(g_0)
+}
+>>>>>>> 0ca003d1a4e61eb17fbb889c9db01a997580594e
 
 
 
@@ -99,34 +120,43 @@ for (j in 1:d){
 y_list <- unname(y_list)
 y_star <- colSums(y_list)
 #get the y_i
-# sce1 <- rnorm(n, 0, 1)
+sce1 <- rnorm(n, 0, 1)
 # sce2 <- rcauchy(n, 0, 1)
 # e <- x**0.5/n**0.5
 # te <- rt(n, 2)
 # sce3 <- e*te
 # sce4 <- rt(n,3)
 # sce5 <- rcauchy(n, 0, 1)
-# y <- y_star + sce5
+y <- y_star + sce1
 
 #scenario 6
+<<<<<<< HEAD
 sce6 <-rt(n,2)
 sce6_9q <- qt(0.9, 2)
 y<-y_star+sce6
 y_9q <- y_star+sce6_9q
 plot(y_9q, type="l", col="black", ylab='0.9 quantile')
+=======
+# sce6 <-rt(n,2)
+# sce6_9q <- qt(0.9, 2)
+# y<-y_star*sce6
+# y_9q <- y_star*sce6_9q
+# plot(y_9q, type="l", col="black", ylab='0.9 quantile')
+>>>>>>> 0ca003d1a4e61eb17fbb889c9db01a997580594e
 
 y_mean <- mean(y)
 
 get_mse <- function(k){
-  trend_list <- data.frame()
+  trend_list <- data.frame() # local
   cum_trend_sofar <-0
   for (j in 1:d){
     resp <- y - cum_trend_sofar
-    fit_matrix <- trendfilter(resp, ord=k)$fit
-    mses<-apply(fit_matrix,2,MSE,b=resp)
+    # since we are using trendfilter, rather than QTF, this is ATF
+    fit_matrix <- trendfilter(resp, ord=k)$fit # I'm imagine here we are using all lambdas, pulled globally
+    mses<-apply(fit_matrix,2,MSE,b=resp) # this and the following line take the best model
     trend_j <- fit_matrix[,which.min(mses)]
     trend_list<-  rbind(trend_list,trend_j)
-    cum_trend_sofar <- cum_trend_sofar + trend_j
+    cum_trend_sofar <- cum_trend_sofar + trend_j # im not sure exactly how this accomplishes line (i)
   }
   
   ## get MSE
@@ -138,6 +168,7 @@ get_mse <- function(k){
   cum_trend_sofar <-0
   for (j in 1:d){
     resp <- y - cum_trend_sofar
+    # same concepts as above, but now with QTF
     q_trend_j <- c(get_trend(resp, tau, lambda, k))
     q_trend_list<-  rbind(q_trend_list,q_trend_j)
     cum_trend_sofar <- cum_trend_sofar + q_trend_j
@@ -148,7 +179,10 @@ get_mse <- function(k){
   MSE_q_trend_hat <- MSE(y_star, q_trend_hat)
   return(list(MSE_trend_hat, MSE_q_trend_hat))
   
+  # where does the MC sampling come in? 
 }
+
+# This looks like the same thing? 
 
 # # using the additive trend filtering
 # 
