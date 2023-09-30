@@ -1,9 +1,10 @@
-library(devtools)
-install_github("zzh237/detrendr")
-install_github("glmgen/genlasso")
-library(detrendr)
-library(genlasso)
-
+# install.packages("devtools")
+# library(devtools)
+# install_github("zzh237/detrendr")
+# install_github("glmgen/genlasso")
+# library(detrendr)
+# library(genlasso)
+trace(get_model, edit=TRUE)
 MSE <- function(a, b){
   len = length(a)
   return(norm(a - b, type="2")**2/len) 
@@ -14,7 +15,7 @@ lambda_list <- seq(1, 4.5, length.out=300)
 
 
 lambda <- 5
-tau <- c(0.9)
+tau <- c(0.1)
 n <- 5000
 d <- 10
 
@@ -23,8 +24,8 @@ d <- 10
 ## prepare the inputs X, and the true function
 x <- seq(1, n, 1)
 
-# get sceneria 1, 2, 3
-# x <- x/n
+# get sceneria 1, 2, 3，6
+x <- x/n
 
 
 # get scenerio 4
@@ -75,7 +76,7 @@ get_g_j <- function(x_j, j){
 #   return(g_0)
 # }
 
-# scenerio 1, 2, 3, Doppler-like
+# # scenerio 1, 2, 3, Doppler-like
 # get_g_j <- function(x_j, j){
 #   g_0 <- sin(2*pi/(x_j + 0.1)**(j/10))
 #   g_0_n <- norm(g_0, type="2")/sqrt(n)
@@ -110,8 +111,8 @@ y_star <- colSums(y_list)
 #scenario 6
 sce6 <-rt(n,2)
 sce6_9q <- qt(0.9, 2)
-y<-y_star*sce6
-y_9q <- y_star*sce6_9q
+y<-y_star+sce6
+y_9q <- y_star+sce6_9q
 plot(y_9q, type="l", col="black", ylab='0.9 quantile')
 
 y_mean <- mean(y)
@@ -195,7 +196,7 @@ data = data.frame(n = n, Scenario = 6,
                   ATF1 =ATF1, ATF2 =ATF2)
 
 # write data to a sample.csv file
-write.table(data, file = "sample2.csv", append = TRUE, quote = FALSE,
+write.table(data, file = "~/QATF/sample2.csv", append = TRUE, quote = FALSE,
             col.names = FALSE, row.names = FALSE) 
 
 
@@ -209,4 +210,5 @@ plot(y_star, type="l", col="black") # this is the y_star, without errors
 # lines(q_trend_hat~x, col="blue")
 # lines(trend[,1]~x, col="red")
 # lines(trend[,2]~x, col="blue")
+
 
