@@ -4,7 +4,7 @@
 # install_github("glmgen/genlasso")
 # library(detrendr)
 # library(genlasso)
-trace(get_model, edit=TRUE)
+# trace(get_model, edit=TRUE)
 MSE <- function(a, b){
   len = length(a)
   return(norm(a - b, type="2")**2/len) 
@@ -16,13 +16,8 @@ lambda_list <- seq(1, 4.5, length.out=300)
 
 
 lambda <- 5
-<<<<<<< HEAD
-tau <- c(0.1)
+tau <- c(0.9)
 n <- 5000
-=======
-tau <- c(0.5)
-n <- 1000
->>>>>>> 0ca003d1a4e61eb17fbb889c9db01a997580594e
 d <- 10
 
 
@@ -30,12 +25,8 @@ d <- 10
 ## prepare the inputs X, and the true function
 x <- seq(1, n, 1)
 
-<<<<<<< HEAD
-# get sceneria 1, 2, 3，6
-=======
 # get sceneria 1, 2, 3
->>>>>>> 0ca003d1a4e61eb17fbb889c9db01a997580594e
-x <- x/n
+# x <- x/n
 
 
 # get scenerio 4
@@ -47,25 +38,21 @@ x <- x/n
 # get scenerio 5
 # x<- cos(6*pi*x/n)
 
-# get scenerio 6
-half <- n/2
-x[1:half] <- (0.25*(x[1:half]/n)**0.5 + 1.375)/3
-x <- replace(x, seq(half+1, n, 1), (7*(tail(x,half)/n)**0.5-2)/3)
-
-
+# get scenario 6
+x<- x*0
 
 # get the simulated heterogeneously-smooth data
 x_j <- x # we could add permutation for different j.
 
 
 # scenerio 6
-# get_g_j <- function(x_j, j){
-#   g_0 <- (x_j + 0.1)*(j/10)
-#   g_0_n <- norm(g_0, type="2")/sqrt(n)
-#   a_j <- 1/g_0_n
-#   g_0 <- a_j**(x_j + 0.1)*(j/10)
-#   return(g_0)
-# }
+get_g_j <- function(x_j, j){
+  g_0 <- (x_j + 0.1)*(j/10)
+  g_0_n <- norm(g_0, type="2")/sqrt(n)
+  a_j <- 1/g_0_n
+  g_0 <- a_j**(x_j + 0.1)*(j/10)
+  return(g_0)
+}
 
 # scenerio 5
 # get_g_j <- function(x_j, j){
@@ -86,7 +73,7 @@ x_j <- x # we could add permutation for different j.
 #   return(g_0)
 # }
 
-<<<<<<< HEAD
+
 # # scenerio 1, 2, 3, Doppler-like
 # get_g_j <- function(x_j, j){
 #   g_0 <- sin(2*pi/(x_j + 0.1)**(j/10))
@@ -95,16 +82,7 @@ x_j <- x # we could add permutation for different j.
 #   g_0 <- a_j*sin(2*pi/(x_j + 0.1)**(j/10))
 #   return(g_0)
 # }
-=======
-# scenerio 1, 2, 3, Doppler-like
-get_g_j <- function(x_j, j){
-  g_0 <- sin(2*pi/(x_j + 0.1)**(j/10))
-  g_0_n <- norm(g_0, type="2")/sqrt(n)
-  a_j <- 1/g_0_n
-  g_0 <- a_j*sin(2*pi/(x_j + 0.1)**(j/10))
-  return(g_0)
-}
->>>>>>> 0ca003d1a4e61eb17fbb889c9db01a997580594e
+
 
 
 
@@ -118,31 +96,29 @@ for (j in 1:d){
 }
 #get the y_star
 y_list <- unname(y_list)
+# sum all of the columns to achieve the additive
 y_star <- colSums(y_list)
 #get the y_i
-sce1 <- rnorm(n, 0, 1)
+# get other scenerios error
+# sce1 <- rnorm(n, 0, 1)
 # sce2 <- rcauchy(n, 0, 1)
 # e <- x**0.5/n**0.5
 # te <- rt(n, 2)
 # sce3 <- e*te
 # sce4 <- rt(n,3)
 # sce5 <- rcauchy(n, 0, 1)
-y <- y_star + sce1
+# y <- y_star + sce1
 
-#scenario 6
-<<<<<<< HEAD
+# get scenerio 6 error
+half <- n/2
+x[1:half] <- (0.25*(x[1:half]/n)**0.5 + 1.375)/3
+x <- replace(x, seq(half+1, n, 1), (7*(tail(x,half)/n)**0.5-2)/3)
 sce6 <-rt(n,2)
 sce6_9q <- qt(0.9, 2)
-y<-y_star+sce6
-y_9q <- y_star+sce6_9q
+y<-y_star+x*sce6
+y_9q <- y_star+x*sce6_9q
 plot(y_9q, type="l", col="black", ylab='0.9 quantile')
-=======
-# sce6 <-rt(n,2)
-# sce6_9q <- qt(0.9, 2)
-# y<-y_star*sce6
-# y_9q <- y_star*sce6_9q
-# plot(y_9q, type="l", col="black", ylab='0.9 quantile')
->>>>>>> 0ca003d1a4e61eb17fbb889c9db01a997580594e
+
 
 y_mean <- mean(y)
 
