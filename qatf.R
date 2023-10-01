@@ -10,10 +10,10 @@ MSE <- function(a, b){
   return(norm(a - b, type="2")**2/len) 
 }
 
-# Professor suggested possibly increasing this to 6
-lambda_list <- seq(1, 4.5, length.out=300)
-10**(lambda_list)
+## Need a model selection that penalizes overfitting for our univariate usage
 
+
+lambda_list <- 10**seq(-1, 4.5, length.out=300)
 
 lambda <- 5
 tau <- c(0.9)
@@ -122,88 +122,97 @@ plot(y_9q, type="l", col="black", ylab='0.9 quantile')
 
 y_mean <- mean(y)
 
-get_mse <- function(k){
-  trend_list <- data.frame() # local
-  cum_trend_sofar <-0
-  for (j in 1:d){
-    resp <- y - cum_trend_sofar
-    # since we are using trendfilter, rather than QTF, this is ATF
-    fit_matrix <- trendfilter(resp, ord=k)$fit # I'm imagine here we are using all lambdas, pulled globally
-    mses<-apply(fit_matrix,2,MSE,b=resp) # this and the following line take the best model
-    trend_j <- fit_matrix[,which.min(mses)]
-    trend_list<-  rbind(trend_list,trend_j)
-    cum_trend_sofar <- cum_trend_sofar + trend_j # im not sure exactly how this accomplishes line (i)
+get_mse <- function(k, alpha = 0.0001, max_t = 50){
+  zero_matrix <- matrix(0, nrow = n, ncol = d)
+  trend_list <- as.data.frame(zero_matrix) 
+  # we initialize all component functions to be 0
+  
+  trend_hat_prev <- rep(0, times = n)
+  t <- 1
+  
+  repeat {
+    for (j in 1:d){
+      # calculate jth partial residual using components not equal to j
+      resp <- y - t(rowSums(trend_list[, -j]))
+      fit_matrix <- trendfilter(resp, ord=k)$fit 
+      mses<-apply(fit_matrix,2,MSE,b=resp)
+      print(mses)
+      trend_list[, j] <- fit_matrix[,which.min(mses)]
+    }
+    
+    trend_hat <- rowSums(trend_list)
+    
+    if (all((abs(trend_hat - trend_hat_prev) <= alpha))) {
+      cat("terminating after ", t, "iterations from convergence\n")
+      break
+    } 
+    else if (t >= max_t) {
+      cat("terminating manually after ", t, "iterations\n")
+      break
+    }
+    trend_hat_prev <- trend_hat
+    cat("after ", t, " iterations MSE = ", MSE(y_star, trend_hat), "\n")
+    t <- t + 1
   }
-  
-  ## get MSE
-  trend_hat <- colSums(trend_list)
-  MSE_trend_hat <- MSE(y_star, trend_hat)
-  
-  # using the quantile additive trend filtering
-  q_trend_list <- data.frame()
-  cum_trend_sofar <-0
-  for (j in 1:d){
-    resp <- y - cum_trend_sofar
-    # same concepts as above, but now with QTF
-    q_trend_j <- c(get_trend(resp, tau, lambda, k))
-    q_trend_list<-  rbind(q_trend_list,q_trend_j)
-    cum_trend_sofar <- cum_trend_sofar + q_trend_j
-  }
-  
-  ## get MSE
-  q_trend_hat <- colSums(q_trend_list)
-  MSE_q_trend_hat <- MSE(y_star, q_trend_hat)
-  return(list(MSE_trend_hat, MSE_q_trend_hat))
-  
-  # where does the MC sampling come in? 
+  return(MSE(y_star, trend_hat))
 }
 
-# This looks like the same thing? 
-
-# # using the additive trend filtering
-# 
-# trend_list <- data.frame()
-# cum_trend_sofar <-0
-# for (j in 1:d){
-#   resp <- y - y_mean - cum_trend_sofar
-#   fit_matrix <- trendfilter(resp, ord=k)$fit
-#   mses<-apply(fit_matrix,2,MSE,b=resp)
-#   trend_j <- fit_matrix[,which.min(mses)]
-#   trend_list<-  rbind(trend_list,trend_j)
-#   cum_trend_sofar <- cum_trend_sofar + trend_j
-# }
-# 
-# ## get MSE
-# trend_hat <- colSums(trend_list)
-# MSE_trend_hat <- MSE(y_star, trend_hat)
-# 
-# # using the quantile additive trend filtering
-# q_trend_list <- data.frame()
-# cum_trend_sofar <-0
-# for (j in 1:d){
-#   resp <- y - y_mean - cum_trend_sofar
-#   q_trend_j <- c(get_trend(resp, tau, lambda, k))
-#   q_trend_list<-  rbind(q_trend_list,q_trend_j)
-#   cum_trend_sofar <- cum_trend_sofar + q_trend_j
-# }
-# 
-# ## get MSE
-# q_trend_hat <- colSums(q_trend_list)
-# MSE_q_trend_hat <- MSE(y_star, q_trend_hat)
 
 
+get_mse_q <- function(k, alpha = 0.0001, max_t = 50){
+  zero_matrix <- matrix(0, nrow = n, ncol = d)
+  q_trend_list <- as.data.frame(zero_matrix) 
+  # we initialize all component functions to be 0
+  
+  q_trend_hat_prev <- rep(0, times = n)
+  t <- 1
+  
+  repeat {
+    for (j in 1:d){
+      # calculate jth partial residual using components not equal to j
+      resp <- y - as.numeric(t(rowSums(q_trend_list[, -j])))
+      old_MSE <- Inf
+      for (lambda in lambda_list) {
+        fit <- get_trend(resp, tau, lambda, k)
+        if (MSE(fit, resp) < old_MSE) {
+          best_fit <- fit
+          old_MSE <- MSE(fit, resp)
+        }  
+      }
+      q_trend_list[, j] <- best_fit
+    }
+    
+    q_trend_hat <- rowSums(q_trend_list)
+    
+    if (all(abs(q_trend_hat - q_trend_hat_prev) <= alpha)) {
+      cat("terminating after ", t, "iterations from convergence\n")
+      break
+    } 
+    else if (t >= max_t) {
+      cat("terminating manually after ", t, "iterations\n")
+      break
+    }
+    q_trend_hat_prev <- q_trend_hat
+    cat("after ", t, " iterations MSE = ", MSE(y_star, q_trend_hat), "\n")
+    t <- t + 1
+  }
+  return(MSE(y_star, q_trend_hat))
+}
 
 
-mse1 = get_mse(k=1)
-ATF1 = mse1[[1]]
-QATF1 = mse1[[2]]
-mse2 = get_mse(k=2)
-ATF2 = mse2[[1]]
-QATF2 = mse2[[2]]
+ATF2 = get_mse(k=2)
+ATF2
+QATF2 = get_mse_q(k=2)
+QATF2
+ATF3 = get_mse(k=3)
+ATF3
+QATF3 = get_mse_q(k=3)
+QATF3
+
 
 data = data.frame(n = n, Scenario = 6,
-                  tau=tau, QATF1 = QATF1, QATF2 = QATF2,
-                  ATF1 =ATF1, ATF2 =ATF2)
+                  tau=tau, QATF2 = QATF2, QATF3 = QATF3,
+                  ATF2 =ATF2, ATF3 =ATF3)
 
 # write data to a sample.csv file
 write.table(data, file = "~/QATF/sample2.csv", append = TRUE, quote = FALSE,
