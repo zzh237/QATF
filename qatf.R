@@ -41,7 +41,6 @@ x <- x/n
 # get scenario 6
 x<- x*0
 
-
 # get the simulated heterogeneously-smooth data
 x_j <- x # we could add permutation for different j.
 
