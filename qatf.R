@@ -38,10 +38,8 @@ x <- x/n
 # get scenerio 5
 # x<- cos(6*pi*x/n)
 
-# get scenerio 6
 # get scenario 6
 x<- x*0
-
 
 
 # get the simulated heterogeneously-smooth data
