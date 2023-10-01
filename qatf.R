@@ -1,11 +1,10 @@
-library(devtools)
-install_github("zzh237/detrendr")
-install_github("glmgen/genlasso")
-library(detrendr)
-library(genlasso)
-
-
-rm(list = ls())
+# install.packages("devtools")
+# library(devtools)
+# install_github("zzh237/detrendr")
+# install_github("glmgen/genlasso")
+# library(detrendr)
+# library(genlasso)
+# trace(get_model, edit=TRUE)
 MSE <- function(a, b){
   len = length(a)
   return(norm(a - b, type="2")**2/len) 
@@ -16,10 +15,10 @@ MSE <- function(a, b){
 
 lambda_list <- 10**seq(-1, 4.5, length.out=300)
 
-
-tau <- 0.5
-n <- 60
-d <- 3
+lambda <- 5
+tau <- c(0.9)
+n <- 5000
+d <- 10
 
 
 
@@ -40,9 +39,8 @@ x <- x/n
 # x<- cos(6*pi*x/n)
 
 # get scenerio 6
-# half <- n/2
-# x[1:half] <- (0.25*(x[1:half]/n)**0.5 + 1.375)/3
-# x <- replace(x, seq(half+1, n, 1), (7*(tail(x,half)/n)**0.5-2)/3)
+# get scenario 6
+x<- x*0
 
 
 
@@ -226,6 +224,5 @@ plot(y_star, type="l", col="black") # this is the y_star, without errors
 # lines(q_trend_hat~x, col="blue")
 # lines(trend[,1]~x, col="red")
 # lines(trend[,2]~x, col="blue")
-
 
 
