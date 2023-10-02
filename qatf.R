@@ -1,19 +1,21 @@
 # install.packages("devtools")
-# library(devtools)
-# install_github("zzh237/detrendr")
-# install_github("glmgen/genlasso")
-# library(detrendr)
-# library(genlasso)
+library(devtools)
+install_github("zzh237/detrendr")
+install_github("glmgen/genlasso")
+# not sure if this next one is necessary - Zhi can you check? 
+# install_github("statsmaths/glmgen", subdir="R_pkg/glmgen")
+
+library(detrendr)
 # trace(get_model, edit=TRUE)
+library(genlasso)
+library(glmgen)
+
 MSE <- function(a, b){
   len = length(a)
   return(norm(a - b, type="2")**2/len) 
 }
 
-## Need a model selection that penalizes overfitting for our univariate usage
-
-
-lambda_list <- 10**seq(-1, 4.5, length.out=300)
+lambda_list <- 10**seq(-3, 4.5, length.out=50)
 
 lambda <- 5
 tau <- c(0.9)
