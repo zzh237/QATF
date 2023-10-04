@@ -9,24 +9,25 @@ library(detrendr)
 # trace(get_model, edit=TRUE)
 library(glmgen)
 
-rm(list = ls())
+# rm(list = ls())
+cum_data <- data.frame()
 
 MSE <- function(a, b){
   len = length(a)
   return(norm(a - b, type="2")**2/len) 
 }
 
+
+
 tau <- c(0.5)
-n <- 1000
+n <-500
 d <- 10
 
 
 
 ## prepare the inputs X, and the true function
-x <- seq(1, n, 1)
+x <- seq(1, n, 1)/n
 
-# get sceneria 1, 2, 3
-x <- x/n
 
 
 # get scenerio 4
@@ -101,8 +102,8 @@ y_star <- colSums(y_list)
 #get the y_i
 # get other scenerios error
 sce1 <- rnorm(n, 0, 1)
-sce2 <- rcauchy(n, 0, 1)
-# e <- x**0.5/n**0.5
+# sce2 <- rcauchy(n, 0, 1)
+# e <- (x**.5)  # i**.5 / n**.5
 # te <- rt(n, 2)
 # sce3 <- e*te
 # sce4 <- rt(n,3)
@@ -121,9 +122,48 @@ y <- y_star + sce1
 
 
 
+
+
+
+ATF2 <- get_mse(2)
+ATF3 <- get_mse(3)
+QATF2 <- get_mse_q(2)
+QATF3 <- get_mse_q(3)
+
+cat(ATF2$MSE, "at lambda : ", ATF2$LAMBDA, "\n")
+cat(ATF3$MSE, "at lambda : ", ATF3$LAMBDA, "\n")
+cat(QATF2$MSE, "at lambda : ", QATF2$LAMBDA, "\n")
+cat(QATF3$MSE, "at lambda : ", QATF3$LAMBDA, "\n")
+
+
+cum_data <- rbind(cum_data, data.frame(n = n, Scenario = 1,
+                                       tau=tau, QATF2 = QATF2$MSE, QATF3 = QATF3$MSE,
+                                       ATF2 =ATF2$MSE, ATF3 =ATF3$MSE))
+
+# write data to a sample.csv file
+write.csv(cum_data, file = "varianceSCE1.csv")
+
+
+
+
+#> Using same lambda for all quantiles
+plot(y, type="l", col="black") # this is the y with errors
+plot(y_star, type="l", col="black") # this is the y_star, without errors
+
+
+# lines(trend_hat~x, col="red")
+# lines(q_trend_hat~x, col="blue")
+# lines(trend[,1]~x, col="red")
+# lines(trend[,2]~x, col="blue")
+
+
+
+
+
+
 # Worth passing in x, y, and y_star? 
 get_mse <- function(k, alpha = 10**-6, max_t = 50){
-  lambda_list <- 10**seq(5, -10, length.out=100)
+  lambda_list <- 10**seq(5, -10, length.out=50)
   y_mean <- mean(y)
   
   best_mse <- Inf 
@@ -141,7 +181,7 @@ get_mse <- function(k, alpha = 10**-6, max_t = 50){
       for (j in 1:d){
         # calculate jth partial residual using components not equal to j
         resp <- y - y_mean - as.numeric(t(rowSums(trend_list[, -j])))
-        trend_list[, j] <- as.numeric(trendfilter(x, resp, k = k, lambda = lambda)$beta)
+        trend_list[, j] <- as.numeric(trendfilter(seq(1, n, 1)/n, resp, k = k, lambda = lambda)$beta)
       }
       trend_hat <- rowSums(trend_list)
       
@@ -163,12 +203,8 @@ get_mse <- function(k, alpha = 10**-6, max_t = 50){
   
   return(list("MSE" = best_mse, "LAMBDA" = best_lambda, "FIT" = best_trend_hat))
 }
-
-
-# Worth passing in x, y, and y_star? 
-
 get_mse_q <- function(k, alpha = 10**-6, max_t = 50){
-  lambda_list <- 10**seq(5, -10, length.out=100)
+  lambda_list <- 10**seq(5, -10, length.out=50)
   
   best_mse <- Inf 
   best_lambda <- Inf
@@ -185,6 +221,7 @@ get_mse_q <- function(k, alpha = 10**-6, max_t = 50){
         # calculate jth partial residual using components not equal to j
         resp <- y - as.numeric(t(rowSums(q_trend_list[, -j])))
         q_trend_list[, j] <- get_trend(resp, tau, lambda, k)
+        # get_trend requires equally spaced points
       }
       q_trend_hat <- rowSums(q_trend_list)
       
@@ -206,37 +243,5 @@ get_mse_q <- function(k, alpha = 10**-6, max_t = 50){
   }
   return(list("MSE" = best_mse, "LAMBDA" = best_lambda, "FIT" = best_q_trend_hat))
 }
-
-
-ATF2 <- get_mse(2)
-ATF3 <- get_mse(3)
-QATF2 <- get_mse_q(2)
-QATF3 <- get_mse_q(3)
-
-cat(ATF2$MSE, "at lambda : ", ATF2$LAMBDA, "\n")
-cat(ATF3$MSE, "at lambda : ", ATF3$LAMBDA, "\n")
-cat(QATF2$MSE, "at lambda : ", QATF2$LAMBDA, "\n")
-cat(QATF3$MSE, "at lambda : ", QATF3$LAMBDA, "\n")
-
-
-data <- data.frame(n = n, Scenario = 1,
-                  tau=tau, QATF2 = QATF2$MSE, QATF3 = QATF3$MSE,
-                  ATF2 =ATF2$MSE, ATF3 =ATF3$MSE)
-
-# write data to a sample.csv file
-write.table(data, file = "~/QATF/sample2.csv", append = TRUE, quote = FALSE,
-            col.names = FALSE, row.names = FALSE) 
-
-
-
-#> Using same lambda for all quantiles
-plot(y, type="l", col="black") # this is the y with errors
-plot(y_star, type="l", col="black") # this is the y_star, without errors
-
-
-# lines(trend_hat~x, col="red")
-# lines(q_trend_hat~x, col="blue")
-# lines(trend[,1]~x, col="red")
-# lines(trend[,2]~x, col="blue")
 
 
