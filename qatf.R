@@ -40,18 +40,18 @@ x <- seq(1, n, 1)/n
 # x<- cos(6*pi*x/n)
 
 # get scenario 6
-# x<- x*0
+
 
 # get the simulated heterogeneously-smooth data
 x_j <- x # we could add permutation for different j.
 
 
 # scenerio 6
-# get_g_j <- function(x_j, j){
-#   g_0 <- (x_j + 0.1)*(j/10)
+# get_g_j <- function(j){
+#   g_0 <- (0.1)*(j)
 #   g_0_n <- norm(g_0, type="2")/sqrt(n)
 #   a_j <- 1/g_0_n
-#   g_0 <- a_j**(x_j + 0.1)*(j/10)
+#   g_0 <- a_j**(0.1)*(j)
 #   return(g_0)
 # }
 
@@ -112,12 +112,13 @@ y <- y_star + sce1
 
 # get scenerio 6 error
 # half <- n/2
-# x[1:half] <- (0.25*(x[1:half]/n)**0.5 + 1.375)/3
-# x <- replace(x, seq(half+1, n, 1), (7*(tail(x,half)/n)**0.5-2)/3)
+# e <- seq(1, n, 1)/n
+# e[1:half] <- (0.25*(e[1:half])**0.5 + 1.375)/3
+# e <- replace(e, seq(half+1, n, 1), (7*(tail(e,half))**0.5-2)/3)
 # sce6 <-rt(n,2)
 # sce6_9q <- qt(0.9, 2)
-# y<-y_star+x*sce6
-# y_9q <- y_star+x*sce6_9q
+# y<-y_star+e*sce6
+# y_9q <- y_star+e*sce6_9q
 # plot(y_9q, type="l", col="black", ylab='0.9 quantile')
 
 
