@@ -51,7 +51,8 @@ x_j <- x # we could add permutation for different j.
 #   g_0 <- (0.1)*(j)
 #   g_0_n <- norm(g_0, type="2")/sqrt(n)
 #   a_j <- 1/g_0_n
-#   g_0 <- a_j**(0.1)*(j)
+#   b_j <- a_j * mean(g_0)
+#   g_0 <- a_j**(0.1)*(j) - b_j
 #   return(g_0)
 # }
 
@@ -60,7 +61,8 @@ x_j <- x # we could add permutation for different j.
 #   g_0 <- (x_j + 0.1)*(j/10)
 #   g_0_n <- norm(g_0, type="2")/sqrt(n)
 #   a_j <- 1/g_0_n
-#   g_0 <- a_j*(x_j + 0.1)*(j/10)
+#   b_j <- a_j * mean(g_0)
+#   g_0 <- a_j*(x_j + 0.1)*(j/10) - b_j
 #   return(g_0)
 # }
 
@@ -70,7 +72,8 @@ x_j <- x # we could add permutation for different j.
 #   g_0 <- (x_j + 0.1)**(j/10)
 #   g_0_n <- norm(g_0, type="2")/sqrt(n)
 #   a_j <- 1/g_0_n
-#   g_0 <- a_j*(x_j + 0.1)**(j/10)
+#   b_j <- a_j * mean(g_0)
+#   g_0 <- a_j*(x_j + 0.1)**(j/10) - b_j
 #   return(g_0)
 # }
 
@@ -80,7 +83,8 @@ get_g_j <- function(x_j, j){
   g_0 <- sin(2*pi/(x_j + 0.1)**(j/10))
   g_0_n <- norm(g_0, type="2")/sqrt(n)
   a_j <- 1/g_0_n
-  g_0 <- a_j*sin(2*pi/(x_j + 0.1)**(j/10))
+  b_j <- a_j * mean(g_0)
+  g_0 <- a_j*sin(2*pi/(x_j + 0.1)**(j/10)) - b_j 
   return(g_0)
 }
 
