@@ -368,12 +368,17 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1) {
 }
 
 cum_data <- data.frame()
-cum_data <- rbind(cum_data, run_custom_sce_simulations(500, 10, 0.5, 1, simulations = 1))
+cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 1, simulations = 1))
 cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 1, simulations = 1))
 cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 1, simulations = 1))
+cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 2, simulations = 1))
+cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 2, simulations = 1))
+cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 2, simulations = 1))
+cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 3, simulations = 1))
+cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 3, simulations = 1))
+cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 3, simulations = 1))
 
-
-
+read.csv("MSEs.csv")
 
 vals <- scenario1(500, 10, 1, 0.5)
 ATF1 <- get_mse(vals[[1]], vals[[2]], 500, 10, 1)
