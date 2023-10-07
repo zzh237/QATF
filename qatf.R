@@ -9,6 +9,7 @@ library(detrendr)
 # trace(get_model, edit=TRUE)
 library(glmgen)
 
+prior_results <- read.csv("MSEs.csv")
 
 MSE <- function(a, b){
   len = length(a)
@@ -136,7 +137,7 @@ scenario1 <- function(n, d, tau) {
   par(mfrow = c(1, 2))
   # Plot the true signal and the data
   plot(y_star, type = "l", col = "black", ylab = "true values")
-  plot(y, type = "l", col = "black", ylab = "data")
+  plot(y, col = "black", pch = 19, cex = 0.5, ylab = "data")
   
   if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
   return(list(y, y_star_q))
@@ -176,7 +177,7 @@ scenario2 <- function(n, d, tau) {
   par(mfrow = c(1, 2))
   # Plot the true signal and the data
   plot(y_star, type = "l", col = "black", ylab = "true values")
-  plot(y, type = "l", col = "black", ylab = "data")
+  plot(y, col = "black", pch = 19, cex = 0.5, ylab = "data")
   
   if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
   return(list(y, y_star_q))
@@ -218,7 +219,7 @@ scenario3 <- function(n, d, tau) {
   par(mfrow = c(1, 2))
   # Plot the true signal and the data
   plot(y_star, type = "l", col = "black", ylab = "true values")
-  plot(y, type = "l", col = "black", ylab = "data")
+  plot(y, col = "black", pch = 19, cex = 0.5, ylab = "data")
   
   if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
   return(list(y, y_star_q))
@@ -261,7 +262,7 @@ scenario4 <- function(n, d, tau) {
   par(mfrow = c(1, 2))
   # Plot the true signal and the data
   plot(y_star, type = "l", col = "black", ylab = "true values")
-  plot(y, type = "l", col = "black", ylab = "data")
+  plot(y, col = "black", pch = 19, cex = 0.5, ylab = "data")
   
   if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
   return(list(y, y_star_q))
@@ -302,7 +303,7 @@ scenario5 <- function(n, d, tau) {
   par(mfrow = c(1, 2))
   # Plot the true signal and the data
   plot(y_star, type = "l", col = "black", ylab = "true values")
-  plot(y, type = "l", col = "black", ylab = "data")
+  plot(y, col = "black", pch = 19, cex = 0.5, ylab = "data")
   
   if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
   return(list(y, y_star_q))
@@ -313,7 +314,7 @@ scenario6 <- function(n, d, tau) {
   # x <- 1/n equally spaced
   # y <- vi*epsilon_i
   # vi complicated
-  # epsilon_i normal errors
+  # epsilon_i t(2) errors
   
   if (length(n) != 1 || length(d) != 1 || length(tau) != 1) {
     stop("Scenario function is only suitable for a single scenario.\n
@@ -328,8 +329,8 @@ scenario6 <- function(n, d, tau) {
   
   par(mfrow = c(1, 2))
   # Plot the true signal and the data
-  plot(y_star_q, type = "l", col = "black", ylab = cat(tau, " quantile"))
-  plot(y, type = "l", col = "black", ylab = "data")
+  plot(y_star_q, type = "l", col = "black", ylab = paste(tau, "quantile"))
+  plot(y, col = "black", pch = 19, cex = 0.5, ylab = "data")
   
   if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
   return(list(y, y_star_q))
@@ -395,29 +396,46 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1) {
 }
 
 
-
-
-
-
+# Test the plotting
+scenario1(500, 10, 0.5)
+scenario2(500, 10, 0.5)
+scenario3(500, 10, 0.5)
+scenario4(500, 10, 0.5)
+scenario5(500, 10, 0.5)
+scenario6(500, 10, 0.9)
+scenario6(500, 10, 0.1)
 
 
 
 
 # Run these lines to build the data frame
 # Adjust simulations to your liking
-cum_data <- data.frame()
-cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 1, simulations = 1))
-cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 1, simulations = 1))
-cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 1, simulations = 1))
-cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 2, simulations = 1))
-cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 2, simulations = 1))
-cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 2, simulations = 1))
-cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 3, simulations = 1))
-cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 3, simulations = 1))
-cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 3, simulations = 1))
+# cum_data <- data.frame()
+# cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 1, simulations = 1))
+# cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 1, simulations = 1))
+# cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 1, simulations = 1))
+# cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 2, simulations = 1))
+# cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 2, simulations = 1))
+# cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 2, simulations = 1))
+# cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 3, simulations = 1))
+# cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 3, simulations = 1))
+# cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 3, simulations = 1))
+# cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 4, simulations = 1))
+# cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 4, simulations = 1))
+# cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 4, simulations = 1))
+# cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 5, simulations = 1))
+# cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 5, simulations = 1))
+# cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 5, simulations = 1))
+# cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.9, 6, simulations = 1))
+# cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.9, 6, simulations = 1))
+# cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.9, 6, simulations = 1))
+# cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.1, 6, simulations = 1))
+# cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.1, 6, simulations = 1))
+# cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.1, 6, simulations = 1))
+# write.csv(cum_data, file = "MSEs.csv)
 
-results <- read.csv("MSEs.csv")
 
+# Test a single scenario, great for plots
 vals <- scenario1(500, 10, 1, 0.5)
 ATF1 <- get_mse(vals[[1]], vals[[2]], 500, 10, 1)
 ATF2 <- get_mse(vals[[1]], vals[[2]], 500, 10, 2)
@@ -430,56 +448,9 @@ cat(QATF1$MSE, "at lambda : ", QATF1$LAMBDA, "\n")
 cat(QATF2$MSE, "at lambda : ", QATF2$LAMBDA, "\n")
 
 
-cum_data <- rbind(cum_data, data.frame(n = 500, Scenario = 1,
-                                       tau=0.5, QATF1 = QATF1$MSE, QATF2 = QATF2$MSE,
-                                       ATF1 = ATF1$MSE, ATF2 = ATF2$MSE))
 
 
-
-# get scenerio 6 error
-# generate as if univariate 
-e <- seq(1, n, 1)/n
-e[1:n/4] <- (0.25*(e[1:n/4])**0.5 + 1.375)/3
-e[(n/4+1):n] <- (7*(e[(n/4+1):n])**0.5 - 2)/3
-sce6 <-rt(n,2)
-sce6_9q <- qt(tau, 2)
-y<-y_star+e*sce6
-
-y_star <- y_star+e*sce6_9q
-plot(y_star, type="l", col="black", ylab='0.9 quantile')
-
-
-
-ATF2 <- get_mse(2)
-ATF3 <- get_mse(3)
-QATF2 <- get_mse_q(2)
-QATF3 <- get_mse_q(3)
-
-# cat(ATF2$MSE, "at lambda : ", ATF2$LAMBDA, "\n")
-# cat(ATF3$MSE, "at lambda : ", ATF3$LAMBDA, "\n")
-cat(QATF2$MSE, "at lambda : ", QATF2$LAMBDA, "\n")
-cat(QATF3$MSE, "at lambda : ", QATF3$LAMBDA, "\n")
-
-
-cum_data <- rbind(cum_data, data.frame(n = n, Scenario = 1,
-                                       tau=tau, QATF2 = QATF2$MSE, QATF3 = QATF3$MSE,
-                                       ATF2 = ATF2$MSE, ATF3 = ATF3$MSE))
-
-
-# write data to a sample.csv file
-write.csv(cum_data, file = "MSEs.csv")
-
-cum_data_ten <- cum_data
-cum_data_ten$QATF2 <- cum_data$QATF2 * 10
-cum_data_ten$QATF3 <- cum_data$QATF3 * 10
-cum_data_ten$ATF2 <- cum_data$ATF2 * 10
-cum_data_ten$ATF3 <- cum_data$ATF3 * 10
-write.csv(cum_data_ten, file = "10MSEs.csv")
-
-#> Using same lambda for all quantiles
-plot(y, type="l", col="black") # this is the y with errors
-plot(y_star, type="l", col="black") # this is the y_star, without errors
-
+# Extra plotting ideas
 
 # lines(trend_hat~x, col="red")
 # lines(q_trend_hat~x, col="blue")
