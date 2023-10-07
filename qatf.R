@@ -9,9 +9,6 @@ library(detrendr)
 # trace(get_model, edit=TRUE)
 library(glmgen)
 
-# rm(list = ls())
-# cum_data <- data.frame()
-# read.csv("MSEs.csv")
 
 MSE <- function(a, b){
   len = length(a)
@@ -19,6 +16,7 @@ MSE <- function(a, b){
 }
 
 # These functions require inputs to be passed in
+# Rather than using global names
 get_mse <- function(y, y_star, n, d, k, alpha = 10**-6, max_t = 50, prints = TRUE){
   lambda_list <- 10**seq(5, -10, length.out=50)
   y_mean <- mean(y)
@@ -103,6 +101,14 @@ get_mse_q <- function(y, y_star, n, d, tau, k, alpha = 10**-6, max_t = 50, print
 
 
 scenario1 <- function(n, d, tau) {
+  # Scenario 1
+  # i <- 1:n
+  # g_0(x) <- sin(2*pi/(x + 0.1)**(j/10))
+  # x <- 1/n equally spaced
+  # f_0 <- a_j*g_0 - b_j w/ b_j s.t. mean(f_0) = 0 and a_j s.t. norm(f_0) = 1
+  # y = f_0(x) + epsilon_i
+  # epsilon_i normal errors
+  
   if (length(n) != 1 || length(d) != 1 || length(tau) != 1) {
     stop("Scenario function is only suitable for a single scenario.\n
           Please ensure inputs are each scalar values.")
@@ -114,15 +120,16 @@ scenario1 <- function(n, d, tau) {
   for (j in 1:d) {
     # Doppler-like
     g_0 <- sin(2*pi/(x + 0.1)**(j/10))
-    a_j <- 1 / (norm(g_0, type="2")/sqrt(n))
-    b_j <- a_j*mean(g_0)
-    y_j <- a_j*g_0 - b_j
+    b_j <- mean(g_0)
+    a_j <- 1 / (norm(g_0 - b_j, type="2")/sqrt(n))
+    y_j <- a_j*g_0 - a_j*b_j
     y_list <- rbind(y_list, y_j)
   }
   
   y_list <- unname(y_list)
   y_star <- colSums(y_list)
   
+  # Normal Errors
   y <- y_star + rnorm(n, 0, 1)
   y_star_q <- y_star + qnorm(tau, 0, 1)
   
@@ -135,20 +142,27 @@ scenario1 <- function(n, d, tau) {
   return(list(y, y_star_q))
 }
 scenario2 <- function(n, d, tau) {
+  # Scenario 2
+  # i <- 1:n
+  # g_0(x) <- sin(2*pi/(x + 0.1)**(j/10))
+  # x drawn randomly from uniform distribution for each component
+  # f_0 <- a_j*g_0 - b_j w/ b_j s.t. mean(f_0) = 0 and a_j s.t. norm(f_0) = 1
+  # y = f_0(x) + epsilon_i
+  # epsilon_i cauchy errors
+  
   if (length(n) != 1 || length(d) != 1 || length(tau) != 1) {
     stop("Scenario function is only suitable for a single scenario.\n
           Please ensure inputs are each scalar values.")
   }
   
-  x <- seq(1, n, 1)/n
-  
   y_list <- data.frame()
   for (j in 1:d) {
+    x_j <- sort(runif(n, 0, 1))
     # Doppler-like
-    g_0 <- sin(2*pi/(x + 0.1)**(j/10))
-    a_j <- 1 / (norm(g_0, type="2")/sqrt(n))
-    b_j <- a_j*mean(g_0)
-    y_j <- a_j*g_0 - b_j
+    g_0 <- sin(2*pi/(x_j + 0.1)**(j/10))
+    b_j <- mean(g_0)
+    a_j <- 1 / (norm(g_0 - b_j, type="2")/sqrt(n))
+    y_j <- a_j*g_0 - a_j*b_j
     y_list <- rbind(y_list, y_j)
   }
   
@@ -168,20 +182,27 @@ scenario2 <- function(n, d, tau) {
   return(list(y, y_star_q))
 }
 scenario3 <- function(n, d, tau) {
+  # Scenario 3
+  # i <- 1:n
+  # g_0(x) <- sin(2*pi/(x + 0.1)**(j/10))
+  # x drawn randomly from uniform distribution for each component
+  # f_0 <- a_j*g_0 - b_j w/ b_j s.t. mean(f_0) = 0 and a_j s.t. norm(f_0) = 1
+  # y = f_0(x) + epsilon_i
+  # epsilon_i heteroskedastic t(2) errors
+  
   if (length(n) != 1 || length(d) != 1 || length(tau) != 1) {
     stop("Scenario function is only suitable for a single scenario.\n
           Please ensure inputs are each scalar values.")
   }
   
-  x <- seq(1, n, 1)/n
-  
   y_list <- data.frame()
   for (j in 1:d) {
+    x_j <- sort(runif(n, 0, 1))
     # Doppler-like
-    g_0 <- sin(2*pi/(x + 0.1)**(j/10))
-    a_j <- 1 / (norm(g_0, type="2")/sqrt(n))
-    b_j <- a_j*mean(g_0)
-    y_j <- a_j*g_0 - b_j
+    g_0 <- sin(2*pi/(x_j + 0.1)**(j/10))
+    b_j <- mean(g_0)
+    a_j <- 1 / (norm(g_0 - b_j, type="2")/sqrt(n))
+    y_j <- a_j*g_0 - a_j*b_j
     y_list <- rbind(y_list, y_j)
   }
   
@@ -189,7 +210,8 @@ scenario3 <- function(n, d, tau) {
   y_star <- colSums(y_list)
   
   # Heteroskedastic T errors
-  e <- (x**.5)  # i**.5 / n**.5
+  # function of index
+  e <- (seq(1, n, 1)**.5)/(n**.5)  # i**.5 / n**.5
   y <- y_star + e * rt(n, 2)
   y_star_q <- y_star + e * qt(tau, 2)
   
@@ -201,33 +223,40 @@ scenario3 <- function(n, d, tau) {
   if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
   return(list(y, y_star_q))
 }
-
-# Haven't done these yet
 scenario4 <- function(n, d, tau) {
+  # Scenario 4
+  # i <- 1:n
+  # g_0(x) <- (x + 0.1)*(j/10)
+  # x <- 3(i/n) for (1:n/2), 3(1 - i/n) for (n/2 + 1:n)
+  # f_0 <- a_j*g_0 - b_j w/ b_j s.t. mean(f_0) = 0 and a_j s.t. norm(f_0) = 1
+  # y = f_0(x) + epsilon_i
+  # epsilon_i t(3) errors
+  
   if (length(n) != 1 || length(d) != 1 || length(tau) != 1) {
     stop("Scenario function is only suitable for a single scenario.\n
           Please ensure inputs are each scalar values.")
   }
   
   x <- seq(1, n, 1)/n
+  x[1:(n/2)] <- 3*x[1:(n/2)]
+  x[(n/2 + 1):n] <- 3*(1 - x[(n/2 + 1):n])
   
   y_list <- data.frame()
   for (j in 1:d) {
-    # Doppler-like
-    g_0 <- sin(2*pi/(x + 0.1)**(j/10))
-    a_j <- 1 / (norm(g_0, type="2")/sqrt(n))
-    b_j <- a_j*mean(g_0)
-    y_j <- a_j*g_0 - b_j
+    # Linear
+    g_0 <- (x + 0.1)*(j/10)
+    b_j <- mean(g_0)
+    a_j <- 1 / (norm(g_0 - b_j, type="2")/sqrt(n))
+    y_j <- a_j*g_0 - a_j*b_j
     y_list <- rbind(y_list, y_j)
   }
   
   y_list <- unname(y_list)
   y_star <- colSums(y_list)
   
-  # Heteroskedastic T errors
-  e <- (x**.5)  # i**.5 / n**.5
-  y <- y_star + e * rt(n, 2)
-  y_star_q <- y_star + e * qt(tau, 2)
+  # T errors
+  y <- y_star + rt(n, 3)
+  y_star_q <- y_star + qt(tau, 3)
   
   par(mfrow = c(1, 2))
   # Plot the true signal and the data
@@ -238,30 +267,37 @@ scenario4 <- function(n, d, tau) {
   return(list(y, y_star_q))
 }
 scenario5 <- function(n, d, tau) {
+  # Scenario 5
+  # i <- 1:n
+  # g_0(x) <- (x + 0.1)*(j/10)
+  # x <- cos(6*pi*(i/n))
+  # f_0 <- a_j*g_0 - b_j w/ b_j s.t. mean(f_0) = 0 and a_j s.t. norm(f_0) = 1
+  # y = f_0(x) + epsilon_i
+  # epsilon_i cauchy errors
+  
   if (length(n) != 1 || length(d) != 1 || length(tau) != 1) {
     stop("Scenario function is only suitable for a single scenario.\n
           Please ensure inputs are each scalar values.")
   }
   
-  x <- seq(1, n, 1)/n
+  x <- cos(6*pi*seq(1, n, 1)/n)
   
   y_list <- data.frame()
   for (j in 1:d) {
-    # Doppler-like
-    g_0 <- sin(2*pi/(x + 0.1)**(j/10))
-    a_j <- 1 / (norm(g_0, type="2")/sqrt(n))
-    b_j <- a_j*mean(g_0)
-    y_j <- a_j*g_0 - b_j
+    # Linear 
+    g_0 <- (x + 0.1)*(j/10)
+    b_j <- mean(g_0)
+    a_j <- 1 / (norm(g_0 - b_j, type="2")/sqrt(n))
+    y_j <- a_j*g_0 - a_j*b_j
     y_list <- rbind(y_list, y_j)
   }
   
   y_list <- unname(y_list)
   y_star <- colSums(y_list)
   
-  # Heteroskedastic T errors
-  e <- (x**.5)  # i**.5 / n**.5
-  y <- y_star + e * rt(n, 2)
-  y_star_q <- y_star + e * qt(tau, 2)
+  # Cauchy errors
+  y <- y_star + rcauchy(n, 0, 1)
+  y_star_q <- y_star + qcauchy(tau, 0, 1)
   
   par(mfrow = c(1, 2))
   # Plot the true signal and the data
@@ -272,47 +308,38 @@ scenario5 <- function(n, d, tau) {
   return(list(y, y_star_q))
 }
 scenario6 <- function(n, d, tau) {
+  # Scenario 1
+  # i <- 1:n
+  # x <- 1/n equally spaced
+  # y <- vi*epsilon_i
+  # vi complicated
+  # epsilon_i normal errors
+  
   if (length(n) != 1 || length(d) != 1 || length(tau) != 1) {
     stop("Scenario function is only suitable for a single scenario.\n
           Please ensure inputs are each scalar values.")
   }
   
-  x <- seq(1, n, 1)/n
-  
-  y_list <- data.frame()
-  for (j in 1:d) {
-    # Doppler-like
-    g_0 <- sin(2*pi/(x + 0.1)**(j/10))
-    a_j <- 1 / (norm(g_0, type="2")/sqrt(n))
-    b_j <- a_j*mean(g_0)
-    y_j <- a_j*g_0 - b_j
-    y_list <- rbind(y_list, y_j)
-  }
-  
-  y_list <- unname(y_list)
-  y_star <- colSums(y_list)
-  
-  # Heteroskedastic T errors
-  e <- (x**.5)  # i**.5 / n**.5
-  y <- y_star + e * rt(n, 2)
-  y_star_q <- y_star + e * qt(tau, 2)
+  e <- seq(1, n, 1)/n
+  e[1:n/4] <- (0.25*(e[1:n/4])**0.5 + 1.375)/3
+  e[(n/4+1):n] <- (7*(e[(n/4+1):n])**0.5 - 2)/3
+  y<-e*rt(n,2)
+  y_star_q <- e*qt(tau, 2)
   
   par(mfrow = c(1, 2))
   # Plot the true signal and the data
-  plot(y_star, type = "l", col = "black", ylab = "true values")
+  plot(y_star_q, type = "l", col = "black", ylab = cat(tau, " quantile"))
   plot(y, type = "l", col = "black", ylab = "data")
   
   if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
   return(list(y, y_star_q))
 }
-# Need to address scenario6 issues
-
 
 run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1) {
   # This function only exists for us to make constructing the data frame quicker
   # Wrapper function is set to run with fixed k = 1 and 2, 
   # and append results to formatted data frame.
-
+  
   ATF1_MSE <- 0
   ATF2_MSE <- 0
   QATF1_MSE <- 0
@@ -367,6 +394,17 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1) {
   
 }
 
+
+
+
+
+
+
+
+
+
+# Run these lines to build the data frame
+# Adjust simulations to your liking
 cum_data <- data.frame()
 cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 1, simulations = 1))
 cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 1, simulations = 1))
@@ -378,7 +416,7 @@ cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 3, simulat
 cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 3, simulations = 1))
 cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 3, simulations = 1))
 
-read.csv("MSEs.csv")
+results <- read.csv("MSEs.csv")
 
 vals <- scenario1(500, 10, 1, 0.5)
 ATF1 <- get_mse(vals[[1]], vals[[2]], 500, 10, 1)
@@ -398,85 +436,8 @@ cum_data <- rbind(cum_data, data.frame(n = 500, Scenario = 1,
 
 
 
-
-## prepare the inputs X, and the true function
-x <- seq(1, n, 1)/n
-
-
-
-# get scenerio 4
-# half <- n/2
-# x[1:half] <- 3*x[1:half]
-# x <- replace(x, seq(half+1, n, 1), 3*n - 3*tail(x,half))
-# x <- x/n
-
-# get scenerio 5
-# x<- cos(6*pi*x/n)
-
-
-# get the simulated heterogeneously-smooth data
-x_j <- x # we could add permutation for different j.
-
-
-# scenerio 6
-# get_g_j <- function(x_j, j){
-#   x_j <- 0
-#   g_0 <- (0.1)*(j/10)
-#   g_0_n <- norm(g_0, type="2")/sqrt(n)
-#   a_j <- 1/g_0_n
-#   g_0 <- a_j**(0.1)*(j/10)
-#   return(g_0)
-# }
-
-# scenerio 5
-# get_g_j <- function(x_j, j){
-#   g_0 <- (x_j + 0.1)*(j/10)
-#   g_0_n <- norm(g_0, type="2")/sqrt(n)
-#   a_j <- 1/g_0_n
-#   g_0 <- a_j*(x_j + 0.1)*(j/10)
-#   return(g_0)
-# }
-
-
-# scenerio 4
-# get_g_j <- function(x_j, j){
-#   g_0 <- (x_j + 0.1)**(j/10)
-#   g_0_n <- norm(g_0, type="2")/sqrt(n)
-#   a_j <- 1/g_0_n
-#   g_0 <- a_j*(x_j + 0.1)**(j/10)
-#   return(g_0)
-# }
-
-
-
-
-
-
-
-
-
-# create y star and y 
-y_list <- data.frame()
-for (j in 1:d){
-  y_j <- get_g_j(x_j, j) 
-  y_list <- rbind(y_list, y_j)
-}
-#get the y_star
-y_list <- unname(y_list)
-# sum all of the columns to achieve the additive
-y_star <- colSums(y_list)
-#get the y_i
-# get other scenerios error
-# sce1 <- rnorm(n, 0, 1)
-# sce2 <- rcauchy(n, 0, 1)
-# e <- (x**.5)  # i**.5 / n**.5
-# te <- rt(n, 2)
-# sce3 <- e*te
-# sce4 <- rt(n,3)
-# sce5 <- rcauchy(n, 0, 1)
-# y <- y_star + sce1
-
 # get scenerio 6 error
+# generate as if univariate 
 e <- seq(1, n, 1)/n
 e[1:n/4] <- (0.25*(e[1:n/4])**0.5 + 1.375)/3
 e[(n/4+1):n] <- (7*(e[(n/4+1):n])**0.5 - 2)/3
@@ -524,7 +485,3 @@ plot(y_star, type="l", col="black") # this is the y_star, without errors
 # lines(q_trend_hat~x, col="blue")
 # lines(trend[,1]~x, col="red")
 # lines(trend[,2]~x, col="blue")
-
-
-
-
