@@ -420,7 +420,7 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1) {
       cat("mse for ATF1 was ", ATF1$MSE, "at lambda = ", ATF1$LAMBDA, "\n")
       cat("mse for ATF2 was ", ATF2$MSE, "at lambda = ", ATF2$LAMBDA, "\n")
     } else {
-      cat("not running ATF1 or ATF2 since tau != 0.5")
+      cat("not running ATF1 or ATF2 since tau != 0.5\n")
     }
     
     QS <- get_mse_s(vals[[1]], vals[[2]], n, d, tau, prints = FALSE)
@@ -459,7 +459,6 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1) {
                     ATF2  = format(ATF2_MSE , scientific = FALSE, digits = 6)))
   
 }
-
 
 # Test various scenarios
 scenario1(500, 10, 0.5)
@@ -503,7 +502,7 @@ cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.9, 6, simulat
 cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.1, 6, simulations = 1))
 cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.1, 6, simulations = 1))
 cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.1, 6, simulations = 1))
-write.csv(cum_data, file = "MSEs.csv")
+write.csv(cum_data, file = "MSEsw/qs.csv")
 
 # Test a single scenario, great for plots
 vals <- scenario1(500, 10, 0.5)
