@@ -13,7 +13,7 @@ library(fields)
 
 
 # rm(list = ls())
-# prior_results <- read.csv("MSEs.csv")
+prior_results <- read.csv("MSEs.csv")
 
 MSE <- function(a, b){
   len = length(a)
@@ -24,7 +24,7 @@ MSE <- function(a, b){
 # Return an object with the best_mse, best_lambda, and best_fit
 # optional parameters  allow for better control
 get_mse <- function(y, y_star, n, d, k, alpha = 10**-6, max_t = 50, prints = TRUE){
-  lambda_list <- 10**seq(8, -8, length.out=100)
+  lambda_list <- 10**seq(8, -8, length.out=50)
   y_mean <- mean(y)
   
   best_mse <- Inf 
@@ -65,7 +65,7 @@ get_mse <- function(y, y_star, n, d, k, alpha = 10**-6, max_t = 50, prints = TRU
   return(list("MSE" = best_mse, "LAMBDA" = best_lambda, "FIT" = best_trend_hat))
 }
 get_mse_s <- function(y, y_star, n, d, tau, alpha = 10**-6, max_t = 50, prints = TRUE){
-  lambda_list <- 10**seq(1, -15, length.out=100)
+  lambda_list <- 10**seq(1, -15, length.out=50)
   # cubic splines of this form seem to prefer very small lambda values
   
   best_mse <- Inf 
@@ -105,7 +105,7 @@ get_mse_s <- function(y, y_star, n, d, tau, alpha = 10**-6, max_t = 50, prints =
   return(list("MSE" = best_mse, "LAMBDA" = best_lambda, "FIT" = best_s_trend_hat))
 }
 get_mse_q <- function(y, y_star, n, d, tau, k, alpha = 10**-6, max_t = 50, prints = TRUE){
-  lambda_list <- 10**seq(8, -8, length.out=100)
+  lambda_list <- 10**seq(8, -8, length.out=50)
   
   best_mse <- Inf 
   best_lambda <- Inf
@@ -502,7 +502,7 @@ cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.9, 6, simulat
 cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.1, 6, simulations = 1))
 cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.1, 6, simulations = 1))
 cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.1, 6, simulations = 1))
-write.csv(cum_data, file = "MSEsw/qs.csv")
+write.csv(cum_data, file = "MSEswqs.csv")
 
 # Test a single scenario, great for plots
 vals <- scenario1(500, 10, 0.5)
