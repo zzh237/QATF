@@ -9,17 +9,19 @@ library(detrendr)
 # trace(get_model, edit=TRUE)
 library(glmgen)
 
-prior_results <- read.csv("MSEs.csv")
+# rm(list = ls())
+# prior_results <- read.csv("MSEs.csv")
 
 MSE <- function(a, b){
   len = length(a)
   return(norm(a - b, type="2")**2/len) 
 }
 
-# These functions require inputs to be passed in
-# Rather than using global names
+# These functions require all inputs to be passed in
+# Return an object with the best_mse, best_lambda, and best_fit
+# optional parameters  allow for better control
 get_mse <- function(y, y_star, n, d, k, alpha = 10**-6, max_t = 50, prints = TRUE){
-  lambda_list <- 10**seq(5, -10, length.out=50)
+  lambda_list <- 10**seq(8, -8, length.out=50)
   y_mean <- mean(y)
   
   best_mse <- Inf 
@@ -60,7 +62,7 @@ get_mse <- function(y, y_star, n, d, k, alpha = 10**-6, max_t = 50, prints = TRU
   return(list("MSE" = best_mse, "LAMBDA" = best_lambda, "FIT" = best_trend_hat))
 }
 get_mse_q <- function(y, y_star, n, d, tau, k, alpha = 10**-6, max_t = 50, prints = TRUE){
-  lambda_list <- 10**seq(5, -10, length.out=50)
+  lambda_list <- 10**seq(8, -8, length.out=50)
   
   best_mse <- Inf 
   best_lambda <- Inf
@@ -100,9 +102,11 @@ get_mse_q <- function(y, y_star, n, d, tau, k, alpha = 10**-6, max_t = 50, print
   return(list("MSE" = best_mse, "LAMBDA" = best_lambda, "FIT" = best_q_trend_hat))
 }
 
-  
-  
-  
+
+# Scenario functions wrap our scenarios
+# construct plots withing
+# and return the true quantile fit, y_star_q, and the data, y
+# for tau = 0.5, y_star_q = y_star
 scenario1 <- function(n, d, tau) {
   # Scenario 1
   # i <- 1:n
@@ -338,6 +342,12 @@ scenario6 <- function(n, d, tau) {
   return(list(y, y_star_q))
 }
 
+
+# This is a wrapper function, 
+# calling the appropriate scenario
+# the appropriate algorithm(s)
+# and simulating! 
+# The output is designed for building the data frame
 run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1) {
   # This function only exists for us to make constructing the data frame quicker
   # Wrapper function is set to run with fixed k = 1 and 2, 
@@ -390,15 +400,19 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1) {
   QATF1_MSE <- QATF1_MSE / simulations
   QATF2_MSE <- QATF2_MSE / simulations
   
-  return(data.frame(n = n, Scenario = sce,
-                    tau=tau, Simulations = simulations, 
-                    QATF1 = QATF1_MSE, QATF2 = QATF2_MSE,
-                    ATF1 = ATF1_MSE, ATF2 = ATF2_MSE))
+  return(data.frame(n = n,
+                    Scenario = sce,
+                    tau = tau,
+                    Simulations = simulations,
+                    QATF1 = format(QATF1_MSE, scientific = FALSE, digits = 6),
+                    QATF2 = format(QATF2_MSE, scientific = FALSE, digits = 6),
+                    ATF1 = format(ATF1_MSE, scientific = FALSE, digits = 6),
+                    ATF2 = format(ATF2_MSE, scientific = FALSE, digits = 6)))
   
 }
 
 
-# Test the plotting
+# Test various scenarios
 scenario1(500, 10, 0.5)
 scenario2(500, 10, 0.5)
 scenario3(500, 10, 0.5)
@@ -412,30 +426,35 @@ scenario6(500, 10, 0.1)
 
 # Run these lines to build the data frame
 # Adjust simulations to your liking
-# cum_data <- data.frame()
-# cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 1, simulations = 1))
-# cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 1, simulations = 1))
-# cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 1, simulations = 1))
-# cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 2, simulations = 1))
-# cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 2, simulations = 1))
-# cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 2, simulations = 1))
-# cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 3, simulations = 1))
-# cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 3, simulations = 1))
-# cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 3, simulations = 1))
-# cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 4, simulations = 1))
-# cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 4, simulations = 1))
-# cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 4, simulations = 1))
-# cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 5, simulations = 1))
-# cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 5, simulations = 1))
-# cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 5, simulations = 1))
-# cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.9, 6, simulations = 1))
-# cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.9, 6, simulations = 1))
-# cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.9, 6, simulations = 1))
-# cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.1, 6, simulations = 1))
-# cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.1, 6, simulations = 1))
-# cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.1, 6, simulations = 1))
-# write.csv(cum_data, file = "MSEs.csv)
-
+cum_data <- data.frame()
+# Scenario 1
+cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 1, simulations = 1))
+cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 1, simulations = 1))
+cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 1, simulations = 1))
+# Scenario 2
+cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 2, simulations = 1))
+cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 2, simulations = 1))
+cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 2, simulations = 1))
+# Scenario 3
+cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 3, simulations = 1))
+cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 3, simulations = 1))
+cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 3, simulations = 1))
+# Scenario 4
+cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 4, simulations = 1))
+cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 4, simulations = 1))
+cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 4, simulations = 1))
+# Scenario 5
+cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 5, simulations = 1))
+cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 5, simulations = 1))
+cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 5, simulations = 1))
+# Scenario 6
+cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.9, 6, simulations = 1))
+cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.9, 6, simulations = 1))
+cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.9, 6, simulations = 1))
+cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.1, 6, simulations = 1))
+cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.1, 6, simulations = 1))
+cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.1, 6, simulations = 1))
+write.csv(cum_data, file = "MSEs.csv")
 
 # Test a single scenario, great for plots
 vals <- scenario1(500, 10, 1, 0.5)
