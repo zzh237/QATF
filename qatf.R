@@ -59,7 +59,6 @@ get_mse <- function(y, y_star, n, d, k, alpha = 10**-6, max_t = 50, prints = TRU
   
   return(list("MSE" = best_mse, "LAMBDA" = best_lambda, "FIT" = best_trend_hat))
 }
-
 get_mse_q <- function(y, y_star, n, d, tau, k, alpha = 10**-6, max_t = 50, prints = TRUE){
   lambda_list <- 10**seq(5, -10, length.out=50)
   
@@ -117,7 +116,7 @@ scenario1 <- function(n, d, tau) {
     stop("Scenario function is only suitable for a single scenario.\n
           Please ensure inputs are each scalar values.")
   }
-
+  
   x <- seq(1, n, 1)/n
   
   y_list <- data.frame()
@@ -459,4 +458,3 @@ cat(QATF2$MSE, "at lambda : ", QATF2$LAMBDA, "\n")
 # lines(q_trend_hat~x, col="blue")
 # lines(trend[,1]~x, col="red")
 # lines(trend[,2]~x, col="blue")
-
