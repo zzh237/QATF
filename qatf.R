@@ -121,7 +121,8 @@ get_mse_q <- function(y, y_star, n, d, tau, k, alpha = 10**-6, max_t = 50, print
       for (j in 1:d){
         # calculate jth partial residual using components not equal to j
         resp <- y - as.numeric(t(rowSums(q_trend_list[, -j])))
-        q_trend_list[, j] <- get_trend(resp, tau, lambda, k)
+        # for some reason, get_trend's k is one above expected (e.g. 2 is linear fit)
+        q_trend_list[, j] <- get_trend(resp, tau, lambda, k+1)
         # get_trend requires equally spaced points
       }
       q_trend_hat <- rowSums(q_trend_list)
@@ -469,7 +470,7 @@ scenario5(500, 10, 0.5)
 scenario6(500, 10, 0.9)
 scenario6(500, 10, 0.1)
 
-run_custom_sce_simulations( 500, 10, 0.5, 5, simulations = 1)
+run_custom_sce_simulations( 500, 10, 0.5, 1, simulations = 1)
 
 
 # Run these lines to build the data frame
@@ -505,12 +506,18 @@ cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.1, 6, simulat
 write.csv(cum_data, file = "MSEswqs.csv")
 
 # Test a single scenario, great for plots
-vals <- scenario1(500, 10, 0.5)
+vals <- scenario2(500, 10, 0.5)
 ATF1 <- get_mse(vals[[1]], vals[[2]], 500, 10, 1)
 ATF2 <- get_mse(vals[[1]], vals[[2]], 500, 10, 2)
 QS <- get_mse_s(vals[[1]], vals[[2]], 500, 10, 0.5)
 QATF1 <- get_mse_q(vals[[1]], vals[[2]], 500, 10, 0.5, 1)
 QATF2 <- get_mse_q(vals[[1]], vals[[2]], 500, 10, 0.5, 2)
+
+par(mfrow = c(1, 1))
+plot(vals[[1]], col = "black", pch = 19, cex = 0.5, ylab = "data", 
+     ylim = c(-5, 5))
+lines(ATF2$FIT, col = "red", lwd = 3)
+lines(QATF1$FIT, col = "blue", lwd = 3)
 
 cat(ATF1$MSE, "at lambda : ", ATF1$LAMBDA, "\n")
 cat(ATF2$MSE, "at lambda : ", ATF2$LAMBDA, "\n")
