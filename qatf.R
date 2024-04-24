@@ -1,10 +1,10 @@
 # install.packages("devtools")
-library(devtools)
-install_github("zzh237/detrendr")
-install_github("glmgen/genlasso")
+# library(devtools)
+# install_github("zzh237/detrendr")
+# install_github("glmgen/genlasso")
 # not sure if this next one is necessary - Zhi can you check? 
 # install_github("statsmaths/glmgen", subdir="R_pkg/glmgen")
-install.packages("fields")
+# install.packages("fields")
 
 library(detrendr)
 # trace(get_model, edit=TRUE)
@@ -25,13 +25,21 @@ MSE <- function(a, b){
 # These functions require all inputs to be passed in
 # Return an object with the best_mse, best_lambda, and best_fit
 # optional parameters  allow for better control
-get_mse <- function(y, y_star, n, d, k, alpha = 10**-6, max_t = 50, prints = TRUE){
-  lambda_list <- 10**seq(5, -7, length.out=50)
+get_mse <- function(x, y, y_star, n, d, k, alpha = 10**-4, max_t = 50, prints = TRUE){
+  lambda_list <- 10**seq(4, -10, length.out=50)
   y_mean <- mean(y)
   
   best_mse <- Inf 
   best_lambda <- Inf
   best_trend_hat <- rep(0, times = n)
+  
+  ord <- matrix(NA, nrow = nrow(x), ncol = ncol(x))
+  # Calculate order for each row of x, and sort each row of x
+  # Doing ahead of time saves cost
+  for (j in 1:nrow(x)) { 
+    ord[j, ] <- order(x[j, ])
+    x[j, ] <- x[j, ][ord[j, ]]
+  }
   
   for (lambda in lambda_list) {
     zero_matrix <- as.data.frame(matrix(0, nrow = n, ncol = d)) 
@@ -41,10 +49,14 @@ get_mse <- function(y, y_star, n, d, k, alpha = 10**-6, max_t = 50, prints = TRU
     trend_hat_prev <- rep(0, times = n)
     t <- 1
     repeat {
-      for (j in 1:d){
+      for (j in 1:d) {
         # calculate jth partial residual using components not equal to j
         resp <- y - y_mean - as.numeric(t(rowSums(trend_list[, -j])))
-        trend_list[, j] <- as.numeric(trendfilter(seq(1, n, 1)/n, resp, k = k, lambda = lambda)$beta)
+        
+        fit <- as.numeric(trendfilter(x[j, ], resp[ord[j, ]], k = k, lambda = lambda)$beta)
+        
+        # then unorder the fit 
+        trend_list[, j] <- fit[order(ord[j, ])] 
       }
       trend_hat <- rowSums(trend_list)
       
@@ -66,13 +78,22 @@ get_mse <- function(y, y_star, n, d, k, alpha = 10**-6, max_t = 50, prints = TRU
   
   return(list("MSE" = best_mse, "LAMBDA" = best_lambda, "FIT" = best_trend_hat))
 }
-get_mse_s <- function(y, y_star, n, d, tau, alpha = 10**-6, max_t = 50, prints = TRUE){
+get_mse_s <- function(x, y, y_star, n, d, tau, alpha = 10**-4, max_t = 50, prints = TRUE){
   lambda_list <- 10**seq(1, -14, length.out=50)
   # cubic splines of this form seem to prefer very small lambda values
   
   best_mse <- Inf 
   best_lambda <- Inf
   best_s_trend_hat <- rep(0, times = n)
+  
+  ord <- matrix(NA, nrow = nrow(x), ncol = ncol(x))
+  # Calculate order for each row of x, and sort each row of x
+  # Doing ahead of time saves cost
+  for (j in 1:nrow(x)) { 
+    ord[j, ] <- order(x[j, ])
+    x[j, ] <- x[j, ][ord[j, ]]
+  }
+  
   
   for (lambda in lambda_list) {
     s_trend_list <- as.data.frame(matrix(0, nrow = n, ncol = d)) 
@@ -84,7 +105,11 @@ get_mse_s <- function(y, y_star, n, d, tau, alpha = 10**-6, max_t = 50, prints =
       for (j in 1:d){
         # calculate jth partial residual using components not equal to j
         resp <- y - as.numeric(t(rowSums(s_trend_list[, -j])))
-        s_trend_list[, j] <- qsreg(seq(1, n, 1)/n, resp, lam = lambda, alpha = tau)$fitted.values
+
+        # order inputs
+        fit <- qsreg(x[j, ], resp[ord[j, ]], lam = lambda, alpha = tau)$fitted.values
+        # unorder fit
+        s_trend_list[, j] <- fit[order(ord[j, ])] 
       }
       s_trend_hat <- rowSums(s_trend_list)
       
@@ -106,12 +131,20 @@ get_mse_s <- function(y, y_star, n, d, tau, alpha = 10**-6, max_t = 50, prints =
   }
   return(list("MSE" = best_mse, "LAMBDA" = best_lambda, "FIT" = best_s_trend_hat))
 }
-get_mse_q <- function(y, y_star, n, d, tau, k, alpha = 10**-6, max_t = 50, prints = TRUE){
-  lambda_list <- 10**seq(5, -7, length.out=50)
+get_mse_q <- function(x, y, y_star, n, d, tau, k, alpha = 10**-4, max_t = 50, prints = TRUE){
+  lambda_list <- 10**seq(4, -10, length.out=50)
   
   best_mse <- Inf 
   best_lambda <- Inf
   best_q_trend_hat <- rep(0, times = n)
+  
+  ord <- matrix(NA, nrow = nrow(x), ncol = ncol(x))
+  # Calculate order for each row of x, and sort each row of x
+  # Doing ahead of time saves cost
+  for (j in 1:nrow(x)) { 
+    ord[j, ] <- order(x[j, ])
+    x[j, ] <- x[j, ][ord[j, ]]
+  }
   
   for (lambda in lambda_list) {
     q_trend_list <- as.data.frame(matrix(0, nrow = n, ncol = d)) 
@@ -123,9 +156,14 @@ get_mse_q <- function(y, y_star, n, d, tau, k, alpha = 10**-6, max_t = 50, print
       for (j in 1:d){
         # calculate jth partial residual using components not equal to j
         resp <- y - as.numeric(t(rowSums(q_trend_list[, -j])))
+        
         # for some reason, get_trend's k is one above expected (e.g. 2 is linear fit)
-        q_trend_list[, j] <- get_trend(resp, tau, lambda, k+1)
+        # fit on ordered response
+        fit <- get_trend(resp[ord[j, ]], tau, lambda, k+1)
         # get_trend requires equally spaced points
+        
+        # unorder fit
+        q_trend_list[, j] <- fit[order(ord[j, ])]
       }
       q_trend_hat <- rowSums(q_trend_list)
       
@@ -148,9 +186,9 @@ get_mse_q <- function(y, y_star, n, d, tau, k, alpha = 10**-6, max_t = 50, print
   return(list("MSE" = best_mse, "LAMBDA" = best_lambda, "FIT" = best_q_trend_hat))
 }
 
-# get_mse uses 50 lambdas in 10^5 to 10^-7
+# get_mse uses 50 lambdas in 10^5 to 10^-9
 # get_mse uses 50 lambdas in 10^1 to 10^-14
-# get_mse uses 50 lambdas in 10^5 to 10^-7
+# get_mse uses 50 lambdas in 10^5 to 10^-9
 
 
 # Scenario functions wrap our scenarios
@@ -171,32 +209,28 @@ scenario1 <- function(n, d, tau) {
           Please ensure inputs are each scalar values.")
   }
   
-  x <- seq(1, n, 1)/n
+  x_list <- matrix(NA, nrow = d, ncol = n)
+  y_list <- matrix(NA, nrow = d, ncol = n)
   
-  y_list <- data.frame()
   for (j in 1:d) {
+    x_list[j, ] <- sample(seq(0, 1, length.out = n), replace = FALSE)
+    
     # Doppler-like
-    g_0 <- sin(2*pi/(x + 0.1)**(j/10))
+    g_0 <- sin(2 * pi / (x_list[j, ] + 0.1)^(j / 10))
     b_j <- mean(g_0)
-    a_j <- 1 / (norm(g_0 - b_j, type="2")/sqrt(n))
-    y_j <- a_j*g_0 - a_j*b_j
-    y_list <- rbind(y_list, y_j)
+    a_j <- 1 / (norm(g_0 - b_j, type = "F") / sqrt(n))
+    y_list[j, ] <- a_j * g_0 - a_j * b_j
   }
   
-  y_list <- unname(y_list)
+  # Sum of each column of y_list
   y_star <- colSums(y_list)
   
   # Normal Errors
   y <- y_star + rnorm(n, 0, 1)
   y_star_q <- y_star + qnorm(tau, 0, 1)
   
-  par(mfrow = c(1, 2))
-  # Plot the true signal and the data
-  plot(y_star, type = "l", col = "black", ylab = "true values")
-  plot(y, col = "black", pch = 19, cex = 0.5, ylab = "data")
-  
   if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
-  return(list(y, y_star_q))
+  return(list(x_list, y, y_star_q))
 }
 scenario2 <- function(n, d, tau) {
   # Scenario 2
@@ -212,31 +246,28 @@ scenario2 <- function(n, d, tau) {
           Please ensure inputs are each scalar values.")
   }
   
-  y_list <- data.frame()
+  x_list <- matrix(NA, nrow = d, ncol = n)
+  y_list <- matrix(NA, nrow = d, ncol = n)
+  
   for (j in 1:d) {
-    x_j <- sort(runif(n, 0, 1))
+    x_list[j, ] <- runif(n, 0, 1)
+    
     # Doppler-like
-    g_0 <- sin(2*pi/(x_j + 0.1)**(j/10))
+    g_0 <- sin(2 * pi / (x_list[j, ] + 0.1)^(j / 10))
     b_j <- mean(g_0)
-    a_j <- 1 / (norm(g_0 - b_j, type="2")/sqrt(n))
-    y_j <- a_j*g_0 - a_j*b_j
-    y_list <- rbind(y_list, y_j)
+    a_j <- 1 / (norm(g_0 - b_j, type = "F") / sqrt(n))
+    y_list[j, ] <- a_j * g_0 - a_j * b_j
   }
   
-  y_list <- unname(y_list)
+  # Sum of each column of y_list
   y_star <- colSums(y_list)
   
   # Cauchy Errors
   y <- y_star + rcauchy(n, 0, 1)
   y_star_q <- y_star + qcauchy(tau, 0, 1)
   
-  par(mfrow = c(1, 2))
-  # Plot the true signal and the data
-  plot(y_star, type = "l", col = "black", ylab = "true values")
-  plot(y, col = "black", pch = 19, cex = 0.5, ylab = "data")
-  
   if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
-  return(list(y, y_star_q))
+  return(list(x_list, y, y_star_q))
 }
 scenario3 <- function(n, d, tau) {
   # Scenario 3
@@ -252,18 +283,20 @@ scenario3 <- function(n, d, tau) {
           Please ensure inputs are each scalar values.")
   }
   
-  y_list <- data.frame()
+  x_list <- matrix(NA, nrow = d, ncol = n)
+  y_list <- matrix(NA, nrow = d, ncol = n)
+  
   for (j in 1:d) {
-    x_j <- sort(runif(n, 0, 1))
+    x_list[j, ] <- runif(n, 0, 1)
+    
     # Doppler-like
-    g_0 <- sin(2*pi/(x_j + 0.1)**(j/10))
+    g_0 <- sin(2 * pi / (x_list[j, ] + 0.1)^(j / 10))
     b_j <- mean(g_0)
-    a_j <- 1 / (norm(g_0 - b_j, type="2")/sqrt(n))
-    y_j <- a_j*g_0 - a_j*b_j
-    y_list <- rbind(y_list, y_j)
+    a_j <- 1 / (norm(g_0 - b_j, type = "2") / sqrt(n))
+    y_list[j, ] <- a_j * g_0 - a_j * b_j
   }
   
-  y_list <- unname(y_list)
+  # Sum of each column of y_list
   y_star <- colSums(y_list)
   
   # Heteroskedastic T errors
@@ -272,13 +305,8 @@ scenario3 <- function(n, d, tau) {
   y <- y_star + e * rt(n, 2)
   y_star_q <- y_star + e * qt(tau, 2)
   
-  par(mfrow = c(1, 2))
-  # Plot the true signal and the data
-  plot(y_star, type = "l", col = "black", ylab = "true values")
-  plot(y, col = "black", pch = 19, cex = 0.5, ylab = "data")
-  
   if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
-  return(list(y, y_star_q))
+  return(list(x_list, y, y_star_q))
 }
 scenario4 <- function(n, d, tau) {
   # Scenario 4
@@ -294,21 +322,20 @@ scenario4 <- function(n, d, tau) {
           Please ensure inputs are each scalar values.")
   }
   
-  x <- seq(1, n, 1)/n
-  x[1:(n/2)] <- 3*x[1:(n/2)]
-  x[(n/2 + 1):n] <- 3*(1 - x[(n/2 + 1):n])
+  x_list <- matrix(NA, nrow = d, ncol = n)
+  y_list <- matrix(NA, nrow = d, ncol = n)
   
-  y_list <- data.frame()
   for (j in 1:d) {
+    x_list[j, ] <- sample(seq(0, 1, length.out = n), replace = FALSE)
+    x <- x_list[j, ]
+    
     # Linear
-    g_0 <- (x + 0.1)*(j/10)
+    g_0 <- (ifelse(x < 0.5, 3*x, 3*(1 - x)) + 0.1)*(j/10)
     b_j <- mean(g_0)
     a_j <- 1 / (norm(g_0 - b_j, type="2")/sqrt(n))
-    y_j <- a_j*g_0 - a_j*b_j
-    y_list <- rbind(y_list, y_j)
+    y_list[j, ] <- a_j*g_0 - a_j*b_j
   }
-  
-  y_list <- unname(y_list)
+
   y_star <- colSums(y_list)
   
   # T errors
@@ -321,7 +348,7 @@ scenario4 <- function(n, d, tau) {
   plot(y, col = "black", pch = 19, cex = 0.5, ylab = "data")
   
   if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
-  return(list(y, y_star_q))
+  return(list(x_list, y, y_star_q))
 }
 scenario5 <- function(n, d, tau) {
   # Scenario 5
@@ -337,19 +364,20 @@ scenario5 <- function(n, d, tau) {
           Please ensure inputs are each scalar values.")
   }
   
-  x <- cos(6*pi*seq(1, n, 1)/n)
   
-  y_list <- data.frame()
+  x_list <- matrix(NA, nrow = d, ncol = n)
+  y_list <- matrix(NA, nrow = d, ncol = n)
+  
   for (j in 1:d) {
+    x_list[j, ] <- sample(seq(0, 1, length.out = n), replace = FALSE)
+    
     # Linear 
-    g_0 <- (x + 0.1)*(j/10)
+    g_0 <- (cos(6*pi*x_list[j, ]) + 0.1)*(j/10)
     b_j <- mean(g_0)
     a_j <- 1 / (norm(g_0 - b_j, type="2")/sqrt(n))
-    y_j <- a_j*g_0 - a_j*b_j
-    y_list <- rbind(y_list, y_j)
+    y_list[, ] <- a_j*g_0 - a_j*b_j
   }
   
-  y_list <- unname(y_list)
   y_star <- colSums(y_list)
   
   # Cauchy errors
@@ -362,7 +390,7 @@ scenario5 <- function(n, d, tau) {
   plot(y, col = "black", pch = 19, cex = 0.5, ylab = "data")
   
   if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
-  return(list(y, y_star_q))
+  return(list(x_list, y, y_star_q))
 }
 scenario6 <- function(n, d, tau) {
   # Scenario 1
@@ -377,6 +405,9 @@ scenario6 <- function(n, d, tau) {
           Please ensure inputs are each scalar values.")
   }
   
+  
+  n = 20
+  tau = 0.5
   e <- seq(1, n, 1)/n
   e[1:n/4] <- (0.25*(e[1:n/4])**0.5 + 1.375)/3
   e[(n/4+1):n] <- (7*(e[(n/4+1):n])**0.5 - 2)/3
@@ -420,8 +451,8 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1) {
     # Currently preserving the full output in case we want cool plots
     # Also, only run get_mse for tau = 0.5
     if (tau == 0.5) {
-      ATF1 <- get_mse(vals[[1]], vals[[2]], n, d, 1, prints = FALSE)
-      ATF2 <- get_mse(vals[[1]], vals[[2]], n, d, 2, prints = FALSE)
+      ATF1 <- get_mse(vals[[1]], vals[[2]], vals[[3]], n, d, 1, prints = FALSE)
+      ATF2 <- get_mse(vals[[1]], vals[[2]], vals[[3]], n, d, 2, prints = FALSE)
       ATF1_MSE <- ATF1_MSE + ATF1$MSE
       ATF2_MSE <- ATF2_MSE + ATF2$MSE
       
@@ -431,12 +462,12 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1) {
       cat("not running ATF1 or ATF2 since tau != 0.5\n")
     }
     
-    QS <- get_mse_s(vals[[1]], vals[[2]], n, d, tau, prints = FALSE)
+    QS <- get_mse_s(vals[[1]], vals[[2]], vals[[3]], n, d, tau, prints = FALSE)
     QS_MSE <- QS_MSE + QS$MSE
     cat("mse for QS was ", QS$MSE, "at lambda = ", QS$LAMBDA, "\n")
     
-    QATF1 <- get_mse_q(vals[[1]], vals[[2]], n, d, tau, 1, prints = FALSE)
-    QATF2 <- get_mse_q(vals[[1]], vals[[2]], n, d, tau, 2, prints = FALSE)
+    QATF1 <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], n, d, tau, 1, prints = FALSE)
+    QATF2 <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], n, d, tau, 2, prints = FALSE)
     QATF1_MSE <- QATF1_MSE + QATF1$MSE
     QATF2_MSE <- QATF2_MSE + QATF2$MSE
 
@@ -522,12 +553,18 @@ write.csv(cum_data, file = "scenario6.csv")
 
 
 # Test a single scenario, great for plots
-vals <- scenario6(2500, 10, 0.9)
-# ATF1 <- get_mse(vals[[1]], vals[[2]], 500, 10, 1)
-# ATF2 <- get_mse(vals[[1]], vals[[2]], 500, 10, 2)
-QS <- get_mse_s(vals[[1]], vals[[2]], 2500, 10, 0.9)
-QATF1 <- get_mse_q(vals[[1]], vals[[2]], 2500, 10, 0.9, 1)
-QATF2 <- get_mse_q(vals[[1]], vals[[2]], 2500, 10, 0.9, 2)
+vals <- scenario2(1000, 10, 0.5)
+
+ATF1 <- get_mse(vals[[1]], vals[[2]], vals[[3]], 1000, 10, 1)
+cat("\nlambda of ", ATF1[[2]], " achieved best the MSE of ", ATF1[[1]], "\n\n")
+ATF2 <- get_mse(vals[[1]], vals[[2]], vals[[3]], 1000, 10, 2)
+cat("\nlambda of ", ATF2[[2]], " achieved best the MSE of ", ATF2[[1]], "\n\n")
+QS <- get_mse_s(vals[[1]], vals[[2]], vals[[3]], 1000, 10, 0.5)
+cat("\nlambda of ", QS[[2]], " achieved best the MSE of ", QS[[1]], "\n\n")
+QATF1 <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, 10, 0.5, 1)
+cat("\nlambda of ", QATF1[[2]], " achieved best the MSE of ", QATF1[[1]], "\n\n")
+QATF2 <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, 10, 0.5, 2)
+cat("\nlambda of ", QATF2[[2]], " achieved best the MSE of ", QATF2[[1]], "\n\n")
 
 # an example plot
 par(mfrow = c(1, 1))
@@ -547,13 +584,12 @@ legend("topleft",
 
 
 
+x <- sample(1:10, replace = FALSE)
+ord <- order(x)
+sorted_x <- x[ord]
+x[ord][order(ord)] == x
+  
 # Fix bad data.frame, use old 
 cum_data <- prior_results_qs
 cum_data$QATF1 <- cum_data$QATF2
 
-# old plotting ideas
-
-# lines(trend_hat~x, col="red")
-# lines(q_trend_hat~x, col="blue")
-# lines(trend[,1]~x, col="red")
-# lines(trend[,2]~x, col="blue")
