@@ -26,7 +26,7 @@ MSE <- function(a, b){
 # Return an object with the best_mse, best_lambda, and best_fit
 # optional parameters  allow for better control
 get_mse <- function(x, y, y_star, n, d, k, alpha = 10**-4, max_t = 50, prints = TRUE){
-  lambda_list <- 10**seq(4, -10, length.out=50)
+  lambda_list <- 10**seq(5, -7, length.out=50)
   y_mean <- mean(y)
   
   best_mse <- Inf 
@@ -53,7 +53,7 @@ get_mse <- function(x, y, y_star, n, d, k, alpha = 10**-4, max_t = 50, prints = 
         # calculate jth partial residual using components not equal to j
         resp <- y - y_mean - as.numeric(t(rowSums(trend_list[, -j])))
         
-        fit <- as.numeric(trendfilter(x[j, ], resp[ord[j, ]], k = k, lambda = lambda)$beta)
+        fit <- as.numeric(trendfilter(x[j, ], resp[ord[j, ]], k = k, lambda = lambda, thinning = FALSE)$beta)
         
         # then unorder the fit 
         trend_list[, j] <- fit[order(ord[j, ])] 
@@ -73,10 +73,11 @@ get_mse <- function(x, y, y_star, n, d, k, alpha = 10**-4, max_t = 50, prints = 
       best_mse <- current_mse
       best_lambda <- lambda
       best_trend_hat <- trend_hat
+      best_components <- trend_list
     }
   }
   
-  return(list("MSE" = best_mse, "LAMBDA" = best_lambda, "FIT" = best_trend_hat))
+  return(list("MSE" = best_mse, "LAMBDA" = best_lambda, "FIT" = best_trend_hat, "COMP" = best_components))
 }
 get_mse_s <- function(x, y, y_star, n, d, tau, alpha = 10**-4, max_t = 50, prints = TRUE){
   lambda_list <- 10**seq(1, -14, length.out=50)
@@ -127,12 +128,14 @@ get_mse_s <- function(x, y, y_star, n, d, tau, alpha = 10**-4, max_t = 50, print
       best_mse <- current_mse
       best_lambda <- lambda
       best_s_trend_hat <- s_trend_hat
+      best_components <- s_trend_list
     }
   }
-  return(list("MSE" = best_mse, "LAMBDA" = best_lambda, "FIT" = best_s_trend_hat))
+  
+  return(list("MSE" = best_mse, "LAMBDA" = best_lambda, "FIT" = best_s_trend_hat, "COMP" = best_components))
 }
 get_mse_q <- function(x, y, y_star, n, d, tau, k, alpha = 10**-4, max_t = 50, prints = TRUE){
-  lambda_list <- 10**seq(4, -10, length.out=50)
+  lambda_list <- 10**seq(5, -7, length.out=50)
   
   best_mse <- Inf 
   best_lambda <- Inf
@@ -181,9 +184,10 @@ get_mse_q <- function(x, y, y_star, n, d, tau, k, alpha = 10**-4, max_t = 50, pr
       best_mse <- current_mse
       best_lambda <- lambda
       best_q_trend_hat <- q_trend_hat
+      best_components <- q_trend_list
     }
   }
-  return(list("MSE" = best_mse, "LAMBDA" = best_lambda, "FIT" = best_q_trend_hat))
+  return(list("MSE" = best_mse, "LAMBDA" = best_lambda, "FIT" = best_q_trend_hat, "COMP" = best_components))
 }
 
 # get_mse uses 50 lambdas in 10^5 to 10^-9
@@ -241,6 +245,7 @@ scenario2 <- function(n, d, tau) {
   # y = f_0(x) + epsilon_i
   # epsilon_i cauchy errors
   
+  
   if (length(n) != 1 || length(d) != 1 || length(tau) != 1) {
     stop("Scenario function is only suitable for a single scenario.\n
           Please ensure inputs are each scalar values.")
@@ -262,9 +267,9 @@ scenario2 <- function(n, d, tau) {
   # Sum of each column of y_list
   y_star <- colSums(y_list)
   
-  # Cauchy Errors
-  y <- y_star + rcauchy(n, 0, 1)
-  y_star_q <- y_star + qcauchy(tau, 0, 1)
+  # Normal Errors
+  y <- y_star + rnorm(n, 0, 1)
+  y_star_q <- y_star + qnorm(tau, 0, 1)
   
   if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
   return(list(x_list, y, y_star_q))
@@ -353,8 +358,8 @@ scenario4 <- function(n, d, tau) {
 scenario5 <- function(n, d, tau) {
   # Scenario 5
   # i <- 1:n
-  # g_0(x) <- (x + 0.1)*(j/10)
-  # x <- cos(6*pi*(i/n))
+  # g_0(x) <- (cos(6*pi*(i/n)) + 0.1)*(j/10)
+  # x <- 
   # f_0 <- a_j*g_0 - b_j w/ b_j s.t. mean(f_0) = 0 and a_j s.t. norm(f_0) = 1
   # y = f_0(x) + epsilon_i
   # epsilon_i cauchy errors
@@ -393,7 +398,7 @@ scenario5 <- function(n, d, tau) {
   return(list(x_list, y, y_star_q))
 }
 scenario6 <- function(n, d, tau) {
-  # Scenario 1
+  # Scenario 6
   # i <- 1:n
   # x <- 1/n equally spaced
   # y <- vi*epsilon_i
@@ -421,6 +426,48 @@ scenario6 <- function(n, d, tau) {
   
   if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
   return(list(y, y_star_q))
+}
+scenario7 <- function(n, d, tau) {
+  # Scenario 7
+  # i <- 1:n
+  # g_0(x) <- (cos(6*pi*(i/n)) + 0.1)*(j/10)
+  # x <- 
+  # f_0 <- a_j*g_0 - b_j w/ b_j s.t. mean(f_0) = 0 and a_j s.t. norm(f_0) = 1
+  # y = f_0(x) + epsilon_i
+  # epsilon_i cauchy errors
+  
+  if (length(n) != 1 || length(d) != 1 || length(tau) != 1) {
+    stop("Scenario function is only suitable for a single scenario.\n
+          Please ensure inputs are each scalar values.")
+  }
+  
+  
+  x_list <- matrix(NA, nrow = d, ncol = n)
+  y_list <- matrix(NA, nrow = d, ncol = n)
+  
+  for (j in 1:d) {
+    x_list[j, ] <- sample(seq(0, 1, length.out = n), replace = FALSE)
+    
+    # Linear 
+    g_0 <- (cos(6*pi*x_list[j, ]) + 0.1)*(j/10)
+    b_j <- mean(g_0)
+    a_j <- 1 / (norm(g_0 - b_j, type="2")/sqrt(n))
+    y_list[, ] <- a_j*g_0 - a_j*b_j
+  }
+  
+  y_star <- colSums(y_list)
+  
+  # Cauchy errors
+  y <- y_star + rcauchy(n, 0, 1)
+  y_star_q <- y_star + qcauchy(tau, 0, 1)
+  
+  par(mfrow = c(1, 2))
+  # Plot the true signal and the data
+  plot(y_star, type = "l", col = "black", ylab = "true values")
+  plot(y, col = "black", pch = 19, cex = 0.5, ylab = "data")
+  
+  if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
+  return(list(x_list, y, y_star_q))
 }
 
 
@@ -489,6 +536,7 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1) {
   
   return(data.frame(n = n,
                     Scenario = sce,
+                    d = d,
                     tau = tau,
                     Simulations = simulations,
                     QATF1 = format(QATF1_MSE, scientific = FALSE, digits = 6),
@@ -500,71 +548,82 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1) {
 }
 
 # Test various scenarios
-scenario1(500, 10, 0.5)
+scenario1(500, 6, 0.5)
 scenario2(500, 10, 0.5)
 scenario3(500, 10, 0.5)
+scenario3(500, 10, 0.2)
+scenario3(500, 10, 0.8)
+
+
+
 scenario4(500, 10, 0.5)
 scenario5(500, 10, 0.5)
 scenario6(500, 10, 0.9)
 scenario6(500, 10, 0.1)
 
-# Run these lines to build the data frame
-# Maybe run in chunks, to speed things up. 
 
-# Scenario 1
-cum_data <- data.frame()
-cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 1, simulations = 10))
-cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 1, simulations = 10))
-cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 1, simulations = 10))
-write.csv(cum_data, file = "scenario1.csv")
-# Scenario 2
-cum_data <- data.frame()
-cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 2, simulations = 10))
-cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 2, simulations = 10))
-cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 2, simulations = 10))
-write.csv(cum_data, file = "scenario2.csv")
-# Scenario 3
-cum_data <- data.frame()
-cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 3, simulations = 10))
-cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 3, simulations = 10))
-cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 3, simulations = 10))
-write.csv(cum_data, file = "scenario3.csv")
-# Scenario 4
-cum_data <- data.frame()
-cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 4, simulations = 10))
-cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 4, simulations = 10))
-cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 4, simulations = 10))
-write.csv(cum_data, file = "scenario4.csv")
-# Scenario 5
-cum_data <- data.frame()
-cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 5, simulations = 10))
-cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 5, simulations = 10))
-cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 5, simulations = 10))
-write.csv(cum_data, file = "scenario4.csv")
-# Scenario 6
-cum_data <- data.frame()
-cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.9, 6, simulations = 10))
-cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.9, 6, simulations = 10))
-cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.9, 6, simulations = 10))
-cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.1, 6, simulations = 10))
-cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.1, 6, simulations = 10))
-cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.1, 6, simulations = 10))
-write.csv(cum_data, file = "scenario6.csv")
+# Construct Old Table
+{
+  # Scenario 1
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 1, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 1, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 1, simulations = 10))
+  write.csv(cum_data, file = "scenario1.csv")
+  # Scenario 2
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 2, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 2, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 2, simulations = 10))
+  write.csv(cum_data, file = "scenario2.csv")
+  # Scenario 3
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 3, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 3, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 3, simulations = 10))
+  write.csv(cum_data, file = "scenario3.csv")
+  # Scenario 4
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 4, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 4, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 4, simulations = 10))
+  write.csv(cum_data, file = "scenario4.csv")
+  # Scenario 5
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 5, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 5, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 5, simulations = 10))
+  write.csv(cum_data, file = "scenario4.csv")
+  # Scenario 6
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.9, 6, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.9, 6, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.9, 6, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.1, 6, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.1, 6, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.1, 6, simulations = 10))
+  write.csv(cum_data, file = "scenario6.csv")
+}
+
 
 
 # Test a single scenario, great for plots
 vals <- scenario2(1000, 10, 0.5)
 
 ATF1 <- get_mse(vals[[1]], vals[[2]], vals[[3]], 1000, 10, 1)
-cat("\nlambda of ", ATF1[[2]], " achieved best the MSE of ", ATF1[[1]], "\n\n")
 ATF2 <- get_mse(vals[[1]], vals[[2]], vals[[3]], 1000, 10, 2)
-cat("\nlambda of ", ATF2[[2]], " achieved best the MSE of ", ATF2[[1]], "\n\n")
 QS <- get_mse_s(vals[[1]], vals[[2]], vals[[3]], 1000, 10, 0.5)
-cat("\nlambda of ", QS[[2]], " achieved best the MSE of ", QS[[1]], "\n\n")
 QATF1 <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, 10, 0.5, 1)
-cat("\nlambda of ", QATF1[[2]], " achieved best the MSE of ", QATF1[[1]], "\n\n")
 QATF2 <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, 10, 0.5, 2)
-cat("\nlambda of ", QATF2[[2]], " achieved best the MSE of ", QATF2[[1]], "\n\n")
+
+cat("\nFor ATF1, lambda of ", ATF1[[2]], " achieved best the MSE of ", ATF1[[1]], "\n")
+cat("\nFor ATF2, lambda of ", ATF2[[2]], " achieved best the MSE of ", ATF2[[1]], "\n")
+cat("\nFor QS, lambda of ", QS[[2]], " achieved best the MSE of ", QS[[1]], "\n")
+cat("\nFor QATF1, lambda of ", QATF2[[2]], " achieved best the MSE of ", QATF2[[1]], "\n")
+cat("\nFor QATF2, lambda of ", QATF1[[2]], " achieved best the MSE of ", QATF1[[1]], "\n")
+
+
+
 
 # an example plot
 par(mfrow = c(1, 1))
@@ -581,13 +640,6 @@ legend("topleft",
        lty = c(3, 1, 1),
        bty = "n"                      # No border around the legend
 )
-
-
-
-x <- sample(1:10, replace = FALSE)
-ord <- order(x)
-sorted_x <- x[ord]
-x[ord][order(ord)] == x
   
 # Fix bad data.frame, use old 
 cum_data <- prior_results_qs
