@@ -5,12 +5,15 @@
 # not sure if this next one is necessary - Zhi can you check? 
 # install_github("statsmaths/glmgen", subdir="R_pkg/glmgen")
 # install.packages("fields")
+# install.packages("plotly")
+
 
 library(detrendr)
 # trace(get_model, edit=TRUE)
 library(glmgen)
 library(fields)
-
+library(plotly)
+library(tidyverse)
 
 
 # rm(list = ls())
@@ -193,11 +196,79 @@ get_mse_q <- function(x, y, y_star, n, d, tau, k, alpha = 10**-4, max_t = 50, pr
 # get_mse uses 50 lambdas in 10^1 to 10^-14
 # get_mse uses 50 lambdas in 10^5 to 10^-9
 
+# These functions employ the algorithm for a single lambda, 
+# and output the fit, coefficients for each component, permutation matrix of inputs.
+# Designed for use in plotting after best lambda is acquired using get_mse functions. 
 fit_atf <- function(x, y, n, d, tau, k, lambda, alpha = 10**-4, max_t = 50) {
+  ord <- matrix(NA, nrow = nrow(x), ncol = ncol(x))
+  # Calculate order for each row of x, and sort each row of x
+  # Doing ahead of time saves cost
+  for (j in 1:nrow(x)) { 
+    ord[j, ] <- order(x[j, ])
+    x[j, ] <- x[j, ][ord[j, ]]
+  }
   
+  zero_matrix <- as.data.frame(matrix(0, nrow = n, ncol = d)) 
+  trend_list <- as.data.frame(zero_matrix) 
+  # we initialize all component functions to be 0
+  
+  trend_hat_prev <- rep(0, times = n)
+  t <- 1
+  repeat {
+    for (j in 1:d) {
+      # calculate jth partial residual using components not equal to j
+      resp <- y - y_mean - as.numeric(t(rowSums(trend_list[, -j])))
+      
+      fit <- as.numeric(trendfilter(x[j, ], resp[ord[j, ]], k = k, lambda = lambda, thinning = FALSE)$beta)
+      
+      # then unorder the fit 
+      trend_list[, j] <- fit[order(ord[j, ])] 
+    }
+    trend_hat <- rowSums(trend_list)
+    
+    if (all((abs(trend_hat - trend_hat_prev) <= alpha))) {break}
+    else if (t >= max_t) {break}
+    
+    trend_hat_prev <- trend_hat
+    t <- t + 1
+  }
+  
+  return(list("fit" = q_trend_hat, "components" = q_trend_list, "order" = ord))
 }
 fit_qass <- function(x, y, n, d, tau, k, lambda, alpha = 10**-4, max_t = 50) {
+  ord <- matrix(NA, nrow = nrow(x), ncol = ncol(x))
+  # Calculate order for each row of x, and sort each row of x
+  # Doing ahead of time saves cost
+  for (j in 1:nrow(x)) { 
+    ord[j, ] <- order(x[j, ])
+    x[j, ] <- x[j, ][ord[j, ]]
+  }
   
+  s_trend_list <- as.data.frame(matrix(0, nrow = n, ncol = d)) 
+  # we initialize all component functions to be 0
+  
+  s_trend_hat_prev <- rep(0, times = n)
+  t <- 1
+  repeat {
+    for (j in 1:d){
+      # calculate jth partial residual using components not equal to j
+      resp <- y - as.numeric(t(rowSums(s_trend_list[, -j])))
+      
+      # order inputs
+      fit <- qsreg(x[j, ], resp[ord[j, ]], lam = lambda, alpha = tau)$fitted.values
+      # unorder fit
+      s_trend_list[, j] <- fit[order(ord[j, ])] 
+    }
+    s_trend_hat <- rowSums(s_trend_list)
+    
+    if (all((abs(s_trend_hat - s_trend_hat_prev) <= alpha))) {break}
+    else if (t >= max_t) {break}
+    
+    s_trend_hat_prev <- s_trend_hat
+    t <- t + 1
+  }
+  
+  return(list("fit" = q_trend_hat, "components" = q_trend_list, "order" = ord))
 }
 fit_qatf <- function(x, y, n, d, tau, k, lambda, alpha = 10**-4, max_t = 50) {
   ord <- matrix(NA, nrow = nrow(x), ncol = ncol(x))
@@ -480,7 +551,7 @@ scenario4 <- function(n, d=3, tau) {
   # i <- 1:n
   # g_1(x) <- (cos(6*pi*x) + 0.1)
   # g_2(x) <- piecwise constant
-  # g_3(x) <- exp(3*x)*sin(4*pi*)
+  # g_3(x) <- exp(3*x)*sin(4*pi*x)
   # # x drawn randomly from uniform distribution for each component
   # f_0 <- a_j*g_0 - b_j w/ b_j s.t. mean(f_0) = 0 and a_j s.t. norm(f_0) = 1
   # y = f_0(x) + epsilon_i
@@ -490,43 +561,46 @@ scenario4 <- function(n, d=3, tau) {
     stop("Scenario function is only suitable for a single scenario.\n
           Please ensure inputs are each scalar values.")
   }
-  
+  if (d != 3) {
+    stop("Scenario 4 is specifically designed for d = 3")
+  }
   
   x_list <- matrix(NA, nrow = d, ncol = n)
   y_list <- matrix(NA, nrow = d, ncol = n)
   
+  par(mfrow = c(1, 3))
   for (j in 1:d) {
     x_list[j, ] <- sample(seq(0, 1, length.out = n), replace = FALSE)
     
-    # Linear 
-    g_0 <- (cos(6*pi*x_list[j, ]) + 0.1)*(j/10)
+    g_0 <- switch(j,
+                  cos(6*pi*x_list[j, ]) + 0.1,
+                  ifelse(x_list[j, ] < 0.5, 3*x_list[j, ], 3*(1 - x_list[j, ])) + 0.1,
+                  exp(3*x_list[j, ])*sin(4*pi*x_list[j, ]),
+                  0*x_list[j, ])
     b_j <- mean(g_0)
     a_j <- 1 / (norm(g_0 - b_j, type="2")/sqrt(n))
-    y_list[, ] <- a_j*g_0 - a_j*b_j
+    y_list[j, ] <- a_j*g_0 - a_j*b_j
+    
+    ord <- order(x_list[j, ])
+    plot(y_list[j, ][ord], col = "black", ylab = paste("Component ", j))
   }
-  
   y_star <- colSums(y_list)
   
   # Cauchy errors
-  y <- y_star + rcauchy(n, 0, 1)
-  y_star_q <- y_star + qcauchy(tau, 0, 1)
-  
-  par(mfrow = c(1, 2))
-  # Plot the true signal and the data
-  plot(y_star, type = "l", col = "black", ylab = "true values")
-  plot(y, col = "black", pch = 19, cex = 0.5, ylab = "data")
+  y <- y_star + rt(n, 2)
+  y_star_q <- y_star + qt(tau, 2)
   
   if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
-  return(list(x_list, y, y_star_q))
+  return(list(x_list, y, y_star_q, y_list))
 }
+vals <- scenario4(1000, 3, 0.5)
 scenario5 <- function(n, d=5, tau) {
   # Scenario 7
   # i <- 1:n
   # g_1(x) <- −(t−1/2)**2
   # g_2(x) <- heterogenous sin wave
   # g_3(x) <- useless dimension
-  # g_4(x) <- exp(3*x)*sin(4*pi*)
-  # g_5(x) <- (cos(6*pi*x) + 0.1)
+  # g_4(x) <- exp(3*x)*sin(4*pi*x)
   # # x drawn randomly from uniform distribution for each component
   # f_0 <- a_j*g_0 - b_j w/ b_j s.t. mean(f_0) = 0 and a_j s.t. norm(f_0) = 1
   # y = f_0(x) + epsilon_i
@@ -536,81 +610,96 @@ scenario5 <- function(n, d=5, tau) {
     stop("Scenario function is only suitable for a single scenario.\n
           Please ensure inputs are each scalar values.")
   }
-  
+  if (d != 4) {
+    stop("Scenario 4 is specifically designed for d = 4")
+  }
   
   x_list <- matrix(NA, nrow = d, ncol = n)
   y_list <- matrix(NA, nrow = d, ncol = n)
   
+  par(mfrow = c(1, 4))
   for (j in 1:d) {
     x_list[j, ] <- sample(seq(0, 1, length.out = n), replace = FALSE)
     
-    # Linear 
-    g_0 <- (cos(6*pi*x_list[j, ]) + 0.1)*(j/10)
+    g_0 <- switch(j,
+                  -(x_list[j, ] - 1/2)**2,
+                  1.5*sin(4*pi*x_list[j, ]) + ifelse(x_list[j, ] > 0.5, 0, sin(16*pi*x_list[j, ])),
+                  sample(c(rep(1, ceiling(0.001*n)), rep(0.1, n-ceiling(0.001*n))), n),
+                  exp(3*x_list[j, ])*sin(4*pi*x_list[j, ]),
+                  0*x_list[j, ])
     b_j <- mean(g_0)
     a_j <- 1 / (norm(g_0 - b_j, type="2")/sqrt(n))
-    y_list[, ] <- a_j*g_0 - a_j*b_j
+    y_list[j, ] <- a_j*g_0 - a_j*b_j
+    
+    ord <- order(x_list[j, ])
+    plot(y_list[j, ][ord], col = "black", ylab = paste("Component ", j))
   }
-  
   y_star <- colSums(y_list)
   
   # Cauchy errors
-  y <- y_star + rcauchy(n, 0, 1)
-  y_star_q <- y_star + qcauchy(tau, 0, 1)
-  
-  par(mfrow = c(1, 2))
-  # Plot the true signal and the data
-  plot(y_star, type = "l", col = "black", ylab = "true values")
-  plot(y, col = "black", pch = 19, cex = 0.5, ylab = "data")
+  y <- y_star + rt(n, 2)
+  y_star_q <- y_star + qt(tau, 2)
   
   if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
-  return(list(x_list, y, y_star_q))
+  return(list(x_list, y, y_star_q, y_list))
 }
-scenario6 <- function(n, d=5, tau) {
-  # Scenario 7
-  # i <- 1:n
-  # g_1(x) <- −(t−1/2)**2
-  # g_2(x) <- heterogenous sin wave
-  # g_3(x) <- useless dimension
-  # g_4(x) <- exp(3*x)*sin(4*pi*)
-  # g_5(x) <- (cos(6*pi*x) + 0.1)
-  # # x drawn randomly from uniform distribution for each component
-  # f_0 <- a_j*g_0 - b_j w/ b_j s.t. mean(f_0) = 0 and a_j s.t. norm(f_0) = 1
-  # y = f_0(x) + epsilon_i
-  # epsilon_i t(2) errors
-  
+scenario6 <- function(n, d=2, tau) {
   if (length(n) != 1 || length(d) != 1 || length(tau) != 1) {
-    stop("Scenario function is only suitable for a single scenario.\n
-          Please ensure inputs are each scalar values.")
+    stop("Scenario function is only suitable for a single scenario. Please ensure inputs are each scalar values.")
   }
-  
+  if (d != 2) {
+    stop("Scenario 6 is specifically designed for d = 2")
+  }
   
   x_list <- matrix(NA, nrow = d, ncol = n)
   y_list <- matrix(NA, nrow = d, ncol = n)
+  ord <- matrix(NA, nrow = d, ncol = n)
   
   for (j in 1:d) {
-    x_list[j, ] <- sample(seq(0, 1, length.out = n), replace = FALSE)
+    x_list[j, ] <- sample(seq(0, 1, length.out = n), n, replace = FALSE)
+    # x_list[j, ] <- seq(0, 1, length.out = n)
     
-    # Linear 
-    g_0 <- (cos(6*pi*x_list[j, ]) + 0.1)*(j/10)
+    g_0 <- switch(j,
+                  -(x_list[j, ] - 1/2)**2,
+                  1/2 * cos(6 * pi * x_list[j, ]) + 0.1)
     b_j <- mean(g_0)
-    a_j <- 1 / (norm(g_0 - b_j, type="2")/sqrt(n))
-    y_list[, ] <- a_j*g_0 - a_j*b_j
+    a_j <- 1 / (norm(g_0 - b_j, type = "2") / sqrt(n))
+    y_list[j, ] <- a_j * (g_0 - b_j)
+    
+    ord[j, ] <- order(x_list[j, ])
   }
   
-  y_star <- colSums(y_list)
+  # Create the grid
+  grid <- expand.grid(x1 = x_list[1, ], x2 = x_list[2, ])
   
-  # Cauchy errors
-  y <- y_star + rcauchy(n, 0, 1)
-  y_star_q <- y_star + qcauchy(tau, 0, 1)
+  # Compute the corresponding y values for each (x1, x2) pair
+  grid$y <- with(grid, -(x2 - 1/2)**2 + 1/2 * cos(6 * pi * x1) + 0.1)
   
-  par(mfrow = c(1, 2))
-  # Plot the true signal and the data
-  plot(y_star, type = "l", col = "black", ylab = "true values")
-  plot(y, col = "black", pch = 19, cex = 0.5, ylab = "data")
+  # Create the 3D plot with rainbow color effect
+  plot <- plot_ly(x = ~grid$x1, y = ~grid$x2, z = ~grid$y, 
+                  type = "scatter3d", mode = "markers", 
+                  marker = list(size = 2, color = ~grid$y, colorscale = 'Viridis')) %>%
+    layout(scene = list(
+      xaxis = list(title = "x1"),
+      yaxis = list(title = "x2"),
+      zaxis = list(title = "y")
+    ))
   
-  if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
-  return(list(x_list, y, y_star_q))
+  print(plot)
+  
+  y_star <- grid$y
+  
+  # t errors
+  y <- y_star + rt(n, 2)
+  y_star_q <- y_star + qt(tau, 2)
+  
+  if (tau != 0.5) {
+    warning("Tau != 0.5. Only use output for QATF!")
+  }
+  
+  return(list(x_list, y, y_star_q, y_list))
 }
+vals <- scenario6(500, 2, 0.5)
 
 # Test scenarios for data frame
 scenario1(500, 10, 0.5)
@@ -742,7 +831,7 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1) {
 
 
 # Test a single scenario, great for plots
-vals <- scenario2(1000, 10, 0.5)
+vals <- scenario4(1000, 3, 0.5)
 
 ATF1 <- get_mse(vals[[1]], vals[[2]], vals[[3]], 1000, 10, 1)
 ATF2 <- get_mse(vals[[1]], vals[[2]], vals[[3]], 1000, 10, 2)
