@@ -790,6 +790,45 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1) {
                     ATF2  = format(ATF2_MSE , scientific = FALSE, digits = 6)))
   
 }
+run_custom_sce_simulations_qatf_only <- function(n, d, tau, sce, simulations = 1) {
+  # This function only exists for us to make constructing the data frame quicker
+  # Wrapper function is set to run with fixed k = 1 and 2, 
+  # and append results to formatted data frame.
+  
+
+  QATF1_MSE <- 0
+  QATF2_MSE <- 0
+  for (i in 1:simulations) {
+    if      (sce == 1) {vals <- scenario1(n, d, tau)}
+    else if (sce == 2) {vals <- scenario2(n, d, tau)}
+    else if (sce == 3) {vals <- scenario3(n, d, tau)}
+    else if (sce == 4) {vals <- scenario4(n, d, tau)}
+    else if (sce == 5) {vals <- scenario5(n, d, tau)}
+    else if (sce == 6) {vals <- scenario6(n, d, tau)}
+    else {stop("Only 6 scenarios at the time of this functions' construction")}
+    
+    QATF1 <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], n, d, tau, 1, prints = FALSE)
+    QATF2 <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], n, d, tau, 2, prints = FALSE)
+    QATF1_MSE <- QATF1_MSE + QATF1$MSE
+    QATF2_MSE <- QATF2_MSE + QATF2$MSE
+    
+    cat("mse for QATF1 was ", QATF1$MSE, "at lambda = ", QATF1$LAMBDA, "\n")
+    cat("mse for QATF2 was ", QATF2$MSE, "at lambda = ", QATF2$LAMBDA, "\n")
+    if (simulations != 1) {cat("finished simulation ", i, "\n")}
+  }
+
+  QATF1_MSE <- QATF1_MSE / simulations
+  QATF2_MSE <- QATF2_MSE / simulations
+  
+  return(data.frame(n = n,
+                    Scenario = sce,
+                    d = d,
+                    tau = tau,
+                    Simulations = simulations,
+                    QATF1 = format(QATF1_MSE, scientific = FALSE, digits = 6),
+                    QATF2 = format(QATF2_MSE, scientific = FALSE, digits = 6)))
+  
+}
 # Construct Table
 {
   # Scenario 1
