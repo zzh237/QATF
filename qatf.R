@@ -137,7 +137,7 @@ get_mse_s <- function(x, y, y_star, n, d, tau, alpha = 10**-4, max_t = 50, print
   return(list("MSE" = best_mse, "LAMBDA" = best_lambda, "FIT" = best_s_trend_hat, "COMP" = best_components))
 }
 get_mse_q <- function(x, y, y_star, n, d, tau, k, alpha = 10**-4, max_t = 50, prints = TRUE){
-  lambda_list <- 10**seq(5, -7, length.out=50)
+  lambda_list <- 10**seq(8, -4, length.out=50)
   
   best_mse <- Inf 
   best_lambda <- Inf
@@ -208,6 +208,7 @@ fit_atf <- function(x, y, n, d, tau, k, lambda, alpha = 10**-4, max_t = 50) {
     x[j, ] <- x[j, ][ord[j, ]]
   }
   
+  y_mean <- mean(y)
   zero_matrix <- as.data.frame(matrix(0, nrow = n, ncol = d)) 
   trend_list <- as.data.frame(zero_matrix) 
   # we initialize all component functions to be 0
@@ -233,7 +234,7 @@ fit_atf <- function(x, y, n, d, tau, k, lambda, alpha = 10**-4, max_t = 50) {
     t <- t + 1
   }
   
-  return(list("fit" = q_trend_hat, "components" = q_trend_list, "order" = ord))
+  return(list("fit" = trend_hat, "components" = trend_list, "order" = ord))
 }
 fit_qass <- function(x, y, n, d, tau, k, lambda, alpha = 10**-4, max_t = 50) {
   ord <- matrix(NA, nrow = nrow(x), ncol = ncol(x))
@@ -268,7 +269,7 @@ fit_qass <- function(x, y, n, d, tau, k, lambda, alpha = 10**-4, max_t = 50) {
     t <- t + 1
   }
   
-  return(list("fit" = q_trend_hat, "components" = q_trend_list, "order" = ord))
+  return(list("fit" = s_trend_hat, "components" = s_trend_list, "order" = ord))
 }
 fit_qatf <- function(x, y, n, d, tau, k, lambda, alpha = 10**-4, max_t = 50) {
   ord <- matrix(NA, nrow = nrow(x), ncol = ncol(x))
@@ -555,7 +556,7 @@ scenario4 <- function(n, d=3, tau) {
   # # x drawn randomly from uniform distribution for each component
   # f_0 <- a_j*g_0 - b_j w/ b_j s.t. mean(f_0) = 0 and a_j s.t. norm(f_0) = 1
   # y = f_0(x) + epsilon_i
-  # epsilon_i t(2) errors
+  # epsilon_i t(3) errors
   
   if (length(n) != 1 || length(d) != 1 || length(tau) != 1) {
     stop("Scenario function is only suitable for a single scenario.\n
@@ -587,13 +588,12 @@ scenario4 <- function(n, d=3, tau) {
   y_star <- colSums(y_list)
   
   # Cauchy errors
-  y <- y_star + rt(n, 2)
-  y_star_q <- y_star + qt(tau, 2)
+  y <- y_star + rt(n, 3)
+  y_star_q <- y_star + qt(tau, 3)
   
   if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
   return(list(x_list, y, y_star_q, y_list))
 }
-vals <- scenario4(1000, 3, 0.5)
 scenario5 <- function(n, d=5, tau) {
   # Scenario 7
   # i <- 1:n
@@ -604,7 +604,7 @@ scenario5 <- function(n, d=5, tau) {
   # # x drawn randomly from uniform distribution for each component
   # f_0 <- a_j*g_0 - b_j w/ b_j s.t. mean(f_0) = 0 and a_j s.t. norm(f_0) = 1
   # y = f_0(x) + epsilon_i
-  # epsilon_i t(2) errors
+  # epsilon_i t(3) errors
   
   if (length(n) != 1 || length(d) != 1 || length(tau) != 1) {
     stop("Scenario function is only suitable for a single scenario.\n
@@ -637,8 +637,8 @@ scenario5 <- function(n, d=5, tau) {
   y_star <- colSums(y_list)
   
   # Cauchy errors
-  y <- y_star + rt(n, 2)
-  y_star_q <- y_star + qt(tau, 2)
+  y <- y_star + rt(n, 3)
+  y_star_q <- y_star + qt(tau, 3)
   
   if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
   return(list(x_list, y, y_star_q, y_list))
@@ -669,16 +669,11 @@ scenario6 <- function(n, d=2, tau) {
     ord[j, ] <- order(x_list[j, ])
   }
   
-  # Create the grid
-  grid <- expand.grid(x1 = x_list[1, ], x2 = x_list[2, ])
+  y_star <- colSums(y_list)
   
-  # Compute the corresponding y values for each (x1, x2) pair
-  grid$y <- with(grid, -(x2 - 1/2)**2 + 1/2 * cos(6 * pi * x1) + 0.1)
-  
-  # Create the 3D plot with rainbow color effect
-  plot <- plot_ly(x = ~grid$x1, y = ~grid$x2, z = ~grid$y, 
+  plot <- plot_ly(x = ~x_list[1, ], y = ~x_list[2, ], z = ~y_star, 
                   type = "scatter3d", mode = "markers", 
-                  marker = list(size = 2, color = ~grid$y, colorscale = 'Viridis')) %>%
+                  marker = list(size = 2, color = ~y_star, colorscale = 'Viridis')) %>%
     layout(scene = list(
       xaxis = list(title = "x1"),
       yaxis = list(title = "x2"),
@@ -687,11 +682,9 @@ scenario6 <- function(n, d=2, tau) {
   
   print(plot)
   
-  y_star <- grid$y
-  
   # t errors
-  y <- y_star + rt(n, 2)
-  y_star_q <- y_star + qt(tau, 2)
+  y <- y_star + rt(n, 3)
+  y_star_q <- y_star + qt(tau, 3)
   
   if (tau != 0.5) {
     warning("Tau != 0.5. Only use output for QATF!")
@@ -699,7 +692,11 @@ scenario6 <- function(n, d=2, tau) {
   
   return(list(x_list, y, y_star_q, y_list))
 }
-vals <- scenario6(500, 2, 0.5)
+vals <- scenario4(1000, 3, 0.5)
+vals <- scenario5(1000, 4, 0.5)
+vals <- scenario6(5000, 2, 0.5)
+
+
 
 # Test scenarios for data frame
 scenario1(500, 10, 0.5)
@@ -827,33 +824,101 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1) {
 # Next Code is for plotting # 
 #############################
 
+### Edit, add get_mse function to pick lambda
 
 
+# Plot scenario 4
+{
+  vals <- scenario4(1000, 3, 0.5)
+  # vals[[4]] is y_list, vals[[1]] is x_list
+  # out[[2]] is trend_list, out[[3]] is permutation matrix
+  
+  par(mfrow = c(3, 3))
+  out <- fit_atf(vals[[1]], vals[[2]], 1000, 3, 0.5, 2, 0.01)
+  plot(vals[[4]][1, ][out[[3]][1, ]])
+  lines(out[[2]][, 1][out[[3]][1, ]], col = "red")
+  plot(vals[[4]][2, ][out[[3]][2, ]])
+  lines(out[[2]][, 2][out[[3]][2, ]], col = "red")
+  plot(vals[[4]][3, ][out[[3]][3, ]])
+  lines(out[[2]][, 3][out[[3]][3, ]], col = "red")
+  
+  
+  outs <- fit_qass(vals[[1]], vals[[2]], 1000, 3, 0.5, 2, 0.00000001)
+  plot(vals[[4]][1, ][outs[[3]][1, ]])
+  lines(outs[[2]][, 1][outs[[3]][1, ]], col = "blue")
+  plot(vals[[4]][2, ][outs[[3]][2, ]])
+  lines(outs[[2]][, 2][outs[[3]][2, ]], col = "blue")
+  plot(vals[[4]][3, ][outs[[3]][3, ]])
+  lines(outs[[2]][, 3][outs[[3]][3, ]], col = "blue")
+  
+  
+  outq <- fit_qatf(vals[[1]], vals[[2]], 1000, 3, 0.5, 2, 100)
+  plot(vals[[4]][1, ][outq[[3]][1, ]])
+  lines(outq[[2]][, 1][outq[[3]][1, ]], col = "purple")
+  plot(vals[[4]][2, ][outq[[3]][2, ]])
+  lines(outq[[2]][, 2][outq[[3]][2, ]], col = "purple")
+  plot(vals[[4]][3, ][outq[[3]][3, ]])
+  lines(outq[[2]][, 3][outq[[3]][3, ]], col = "purple")
+}
 
-# Test a single scenario, great for plots
-vals <- scenario4(1000, 3, 0.5)
+# Plot scenario 5
+{
+  vals <- scenario5(1000, 4, 0.5)
+  # vals[[4]] is y_list, vals[[1]] is x_list
+  # out[[2]] is trend_list, out[[3]] is permutation matrix
+  
+  par(mfrow = c(3, 4))
+  out <- fit_atf(vals[[1]], vals[[2]], 1000, 4, 0.5, 2, 0.01)
+  plot(vals[[4]][1, ][out[[3]][1, ]])
+  lines(out[[2]][, 1][out[[3]][1, ]], col = "red")
+  plot(vals[[4]][2, ][out[[3]][2, ]])
+  lines(out[[2]][, 2][out[[3]][2, ]], col = "red")
+  plot(vals[[4]][3, ][out[[3]][3, ]])
+  lines(out[[2]][, 3][out[[3]][3, ]], col = "red")
+  plot(vals[[4]][4, ][out[[3]][4, ]])
+  lines(out[[2]][, 4][out[[3]][4, ]], col = "red")
+  
+  
+  outs <- fit_qass(vals[[1]], vals[[2]], 1000, 4, 0.5, 2, 0.00000001)
+  plot(vals[[4]][1, ][outs[[3]][1, ]])
+  lines(outs[[2]][, 1][outs[[3]][1, ]], col = "blue")
+  plot(vals[[4]][2, ][outs[[3]][2, ]])
+  lines(outs[[2]][, 2][outs[[3]][2, ]], col = "blue")
+  plot(vals[[4]][3, ][outs[[3]][3, ]])
+  lines(outs[[2]][, 3][outs[[3]][3, ]], col = "blue")
+  plot(vals[[4]][4, ][outs[[3]][4, ]])
+  lines(outs[[2]][, 4][outs[[3]][4, ]], col = "blue")
+  
+  
+  outq <- fit_qatf(vals[[1]], vals[[2]], 1000, 4, 0.5, 2, 200)
+  plot(vals[[4]][1, ][outq[[3]][1, ]])
+  lines(outq[[2]][, 1][outq[[3]][1, ]], col = "purple")
+  plot(vals[[4]][2, ][outq[[3]][2, ]])
+  lines(outq[[2]][, 2][outq[[3]][2, ]], col = "purple")
+  plot(vals[[4]][3, ][outq[[3]][3, ]])
+  lines(outq[[2]][, 3][outq[[3]][3, ]], col = "purple")
+  plot(vals[[4]][4, ][outq[[3]][4, ]])
+  lines(outq[[2]][, 4][outq[[3]][4, ]], col = "purple")
+}
 
-ATF1 <- get_mse(vals[[1]], vals[[2]], vals[[3]], 1000, 10, 1)
-ATF2 <- get_mse(vals[[1]], vals[[2]], vals[[3]], 1000, 10, 2)
-QS <- get_mse_s(vals[[1]], vals[[2]], vals[[3]], 1000, 10, 0.5)
-QATF1 <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, 10, 0.5, 1)
-QATF2 <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, 10, 0.5, 2)
-
-cat("\nFor ATF1, lambda of ", ATF1[[2]], " achieved best the MSE of ", ATF1[[1]], "\n")
-cat("\nFor ATF2, lambda of ", ATF2[[2]], " achieved best the MSE of ", ATF2[[1]], "\n")
-cat("\nFor QS, lambda of ", QS[[2]], " achieved best the MSE of ", QS[[1]], "\n")
-cat("\nFor QATF1, lambda of ", QATF2[[2]], " achieved best the MSE of ", QATF2[[1]], "\n")
-cat("\nFor QATF2, lambda of ", QATF1[[2]], " achieved best the MSE of ", QATF1[[1]], "\n")
-
-
-
-
-
-
-
-
-
-
+# Plot scenario 6
+{
+  vals <- scenario6(5000, 2, 0.5)
+  # vals[[4]] is y_list, vals[[1]] is x_list
+  # out[[2]] is trend_list, out[[3]] is permutation matrix
+  
+  outq <- fit_qatf(vals[[1]], vals[[2]], 1000, 4, 0.5, 1, 100)
+  plot <- plot_ly(x = ~vals[[1]][1, ], y = ~vals[[1]][2, ], z = ~vals[[3]], 
+                  type = "scatter3d", mode = "markers", 
+                  marker = list(size = 2, color = ~y_star, colorscale = 'Viridis')) %>%
+    layout(scene = list(
+      xaxis = list(title = "x1"),
+      yaxis = list(title = "x2"),
+      zaxis = list(title = "true y")
+    ))
+  
+  print(plot)
+}
 
 
 
