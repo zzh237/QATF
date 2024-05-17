@@ -53,7 +53,8 @@ get_mse <- function(x, y, y_star, n, d, k, alpha = 10**-4, max_t = 50, prints = 
     repeat {
       for (j in 1:d) {
         # calculate jth partial residual using components not equal to j
-        resp <- y - y_mean - as.numeric(t(rowSums(trend_list[, -j])))
+        if (d == 2) {resp <- y - y_mean - as.numeric(trend_list[, -j])}
+        else {resp <- y - y_mean - as.numeric(t(rowSums(trend_list[, -j])))}
         
         fit <- as.numeric(trendfilter(x[j, ], resp[ord[j, ]], k = k, lambda = lambda, thinning = FALSE)$beta)
         
@@ -107,7 +108,8 @@ get_mse_s <- function(x, y, y_star, n, d, tau, alpha = 10**-4, max_t = 50, print
     repeat {
       for (j in 1:d){
         # calculate jth partial residual using components not equal to j
-        resp <- y - as.numeric(t(rowSums(s_trend_list[, -j])))
+        if (d == 2) {resp <- y - as.numeric(s_trend_list[, -j])}
+        else {resp <- y - as.numeric(t(rowSums(s_trend_list[, -j])))}
 
         # order inputs
         fit <- qsreg(x[j, ], resp[ord[j, ]], lam = lambda, alpha = tau)$fitted.values
@@ -160,7 +162,8 @@ get_mse_q <- function(x, y, y_star, n, d, tau, k, alpha = 10**-4, max_t = 50, pr
     repeat {
       for (j in 1:d){
         # calculate jth partial residual using components not equal to j
-        resp <- y - as.numeric(t(rowSums(q_trend_list[, -j])))
+        if (d == 2) {resp <- y - as.numeric(q_trend_list[, -j])}
+        else {resp <- y - as.numeric(t(rowSums(q_trend_list[, -j])))}
         
         # for some reason, get_trend's k is one above expected (e.g. 2 is linear fit)
         # fit on ordered response
@@ -218,7 +221,8 @@ fit_atf <- function(x, y, n, d, tau, k, lambda, alpha = 10**-4, max_t = 50) {
   repeat {
     for (j in 1:d) {
       # calculate jth partial residual using components not equal to j
-      resp <- y - y_mean - as.numeric(t(rowSums(trend_list[, -j])))
+      if (d == 2) {resp <- y - y_mean - as.numeric(trend_list[, -j])}
+      else {resp <- y - y_mean - as.numeric(t(rowSums(trend_list[, -j])))}
       
       fit <- as.numeric(trendfilter(x[j, ], resp[ord[j, ]], k = k, lambda = lambda, thinning = FALSE)$beta)
       
@@ -253,7 +257,8 @@ fit_qass <- function(x, y, n, d, tau, k, lambda, alpha = 10**-4, max_t = 50) {
   repeat {
     for (j in 1:d){
       # calculate jth partial residual using components not equal to j
-      resp <- y - as.numeric(t(rowSums(s_trend_list[, -j])))
+      if (d == 2) {resp <- y - as.numeric(s_trend_list[, -j])}
+      else {resp <- y - as.numeric(t(rowSums(s_trend_list[, -j])))}
       
       # order inputs
       fit <- qsreg(x[j, ], resp[ord[j, ]], lam = lambda, alpha = tau)$fitted.values
@@ -288,7 +293,8 @@ fit_qatf <- function(x, y, n, d, tau, k, lambda, alpha = 10**-4, max_t = 50) {
   repeat {
     for (j in 1:d){
       # calculate jth partial residual using components not equal to j
-      resp <- y - as.numeric(t(rowSums(q_trend_list[, -j])))
+      if (d == 2) {resp <- y - as.numeric(q_trend_list[, -j])}
+      else {resp <- y - as.numeric(t(rowSums(q_trend_list[, -j])))}
       
       # for some reason, get_trend's k is one above expected (e.g. 2 is linear fit)
       # fit on ordered response
@@ -907,10 +913,10 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1) {
   # vals[[4]] is y_list, vals[[1]] is x_list
   # out[[2]] is trend_list, out[[3]] is permutation matrix
   
-  outq <- fit_qatf(vals[[1]], vals[[2]], 1000, 4, 0.5, 1, 100)
+  outq <- fit_qatf(vals[[1]], vals[[2]], 5000, 2, 0.5, 2, 1000)
   plot <- plot_ly(x = ~vals[[1]][1, ], y = ~vals[[1]][2, ], z = ~vals[[3]], 
                   type = "scatter3d", mode = "markers", 
-                  marker = list(size = 2, color = ~y_star, colorscale = 'Viridis')) %>%
+                  marker = list(size = 3, color = ~vals[[3]], colorscale = 'Viridis')) %>%
     layout(scene = list(
       xaxis = list(title = "x1"),
       yaxis = list(title = "x2"),
@@ -918,6 +924,30 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1) {
     ))
   
   print(plot)
+  
+  plot <- plot_ly(x = ~vals[[1]][1, ], y = ~vals[[1]][2, ], z = ~vals[[2]], 
+                  type = "scatter3d", mode = "markers", 
+                  marker = list(size = 3, color = ~vals[[2]], colorscale = 'Viridis')) %>%
+    layout(scene = list(
+      xaxis = list(title = "x1"),
+      yaxis = list(title = "x2"),
+      zaxis = list(title = "noisy data")
+    ))
+  
+  print(plot)
+  
+  plot <- plot_ly(x = ~vals[[1]][1, ], y = ~vals[[1]][2, ], z = ~outq[[1]], 
+                  type = "scatter3d", mode = "markers", 
+                  marker = list(size = 3, color = ~outq[[1]], colorscale = 'Viridis')) %>%
+    layout(scene = list(
+      xaxis = list(title = "x1"),
+      yaxis = list(title = "x2"),
+      zaxis = list(title = "fit")
+    ))
+  
+  print(plot)
+  
+  
 }
 
 
