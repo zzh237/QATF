@@ -716,49 +716,115 @@ run_custom_sce_simulations_qatf_only <- function(n, d, tau, sce, simulations = 1
                     QATF2 = format(QATF2_MSE, scientific = FALSE, digits = 6)))
   
 }
-# Construct Table
-{
-  # Scenario 1
-  cum_data <- data.frame()
-  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 1, simulations = 10))
-  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 1, simulations = 10))
-  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 1, simulations = 10))
-  write.csv(cum_data, file = "scenario1.csv")
-  # Scenario 2
-  cum_data <- data.frame()
-  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 2, simulations = 10))
-  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 2, simulations = 10))
-  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 2, simulations = 10))
-  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.2, 2, simulations = 10))
-  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.2, 2, simulations = 10))
-  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.2, 2, simulations = 10))
-  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.8, 2, simulations = 10))
-  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.8, 2, simulations = 10))
-  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.8, 2, simulations = 10))
-  write.csv(cum_data, file = "scenario2.csv")
-  # Scenario 3
-  cum_data <- data.frame()
-  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 3, simulations = 10))
-  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 3, simulations = 10))
-  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 3, simulations = 10))
-  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.2, 3, simulations = 10))
-  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.2, 3, simulations = 10))
-  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.2, 3, simulations = 10))
-  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.8, 3, simulations = 10))
-  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.8, 3, simulations = 10))
-  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.8, 3, simulations = 10))
-  write.csv(cum_data, file = "scenario3.csv")
+run_custom_sce_simulations_atf_qs <- function(n, d, tau, sce, simulations = 1) {
+  # This function only exists for us to make constructing the data frame quicker
+  # Wrapper function is set to run with fixed k = 1 and 2, 
+  # and append results to formatted data frame.
+  
+  ATF1_MSE <- 0
+  ATF2_MSE <- 0
+  QS_MSE <- 0
+  for (i in 1:simulations) {
+    if      (sce == 1) {vals <- scenario1(n, d, tau)}
+    else if (sce == 2) {vals <- scenario2(n, d, tau)}
+    else if (sce == 3) {vals <- scenario3(n, d, tau)}
+    else if (sce == 4) {vals <- scenario4(n, d, tau)}
+    else if (sce == 5) {vals <- scenario5(n, d, tau)}
+    else if (sce == 6) {vals <- scenario6(n, d, tau)}
+    else {stop("Only 6 scenarios at the time of this functions' construction")}
+    
+    # Currently preserving the full output in case we want cool plots
+    # Also, only run get_mse for tau = 0.5
+    if (tau == 0.5) {
+      ATF1 <- get_mse(vals[[1]], vals[[2]], vals[[3]], n, d, 1, prints = FALSE)
+      ATF2 <- get_mse(vals[[1]], vals[[2]], vals[[3]], n, d, 2, prints = FALSE)
+      ATF1_MSE <- ATF1_MSE + ATF1$MSE
+      ATF2_MSE <- ATF2_MSE + ATF2$MSE
+      
+      cat("mse for ATF1 was ", ATF1$MSE, "at lambda = ", ATF1$LAMBDA, "\n")
+      cat("mse for ATF2 was ", ATF2$MSE, "at lambda = ", ATF2$LAMBDA, "\n")
+    } else {
+      cat("not running ATF1 or ATF2 since tau != 0.5\n")
+    }
+    
+    QS <- get_mse_s(vals[[1]], vals[[2]], vals[[3]], n, d, tau, prints = FALSE)
+    QS_MSE <- QS_MSE + QS$MSE
+    cat("mse for QS was ", QS$MSE, "at lambda = ", QS$LAMBDA, "\n")
+    
+    
+    if (simulations != 1) {cat("finished simulation ", i, "\n")}
+  }
+  
+  if (tau == 0.5) {
+    ATF1_MSE <- ATF1_MSE / simulations
+    ATF2_MSE <- ATF2_MSE / simulations
+  } else {
+    ATF1_MSE <- NA
+    ATF2_MSE <- NA
+  }
+  QS_MSE <- QS_MSE / simulations
+  
+  return(data.frame(n = n,
+                    Scenario = sce,
+                    d = d,
+                    tau = tau,
+                    Simulations = simulations,
+                    QS    = format(QS_MSE   , scientific = FALSE, digits = 6),
+                    ATF1  = format(ATF1_MSE , scientific = FALSE, digits = 6),
+                    ATF2  = format(ATF2_MSE , scientific = FALSE, digits = 6)))
   
 }
+# Construct Table
+# {
+#   # Scenario 1
+#   cum_data <- data.frame()
+#   cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs( 500, 10, 0.5, 1, simulations = 10))
+#   cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs(1000, 10, 0.5, 1, simulations = 10))
+#   cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs(2500, 10, 0.5, 1, simulations = 10))
+#   write.csv(cum_data, file = "scenario1_atf_qs_05.csv")
+#   # Scenario 2
+  # cum_data <- data.frame()
+  # cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs( 500, 10, 0.5, 2, simulations = 10))
+  # cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs(1000, 10, 0.5, 2, simulations = 10))
+  # cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs(2500, 10, 0.5, 2, simulations = 10))
+  # write.csv(cum_data, file = "scenario2_atf_qs_05.csv")
+  # cum_data <- data.frame()
+  # cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs( 500, 10, 0.2, 2, simulations = 10))
+  # cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs(1000, 10, 0.2, 2, simulations = 10))
+  # cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs(2500, 10, 0.2, 2, simulations = 10))
+  # write.csv(cum_data, file = "scenario2_atf_qs_02.csv")
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs( 500, 10, 0.8, 2, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs(1000, 10, 0.8, 2, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs(2500, 10, 0.8, 2, simulations = 10))
+  write.csv(cum_data, file = "scenario2_atf_qs_08.csv")
+#   # Scenario 3
+#   cum_data <- data.frame()
+#   cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs( 500, 10, 0.5, 3, simulations = 10))
+#   cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs(1000, 10, 0.5, 3, simulations = 10))
+#   cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs(2500, 10, 0.5, 3, simulations = 10))
+#   write.csv(cum_data, file = "scenario3_atf_qs_05.csv")
+#   cum_data <- data.frame()
+#   cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs( 500, 10, 0.2, 3, simulations = 10))
+#   cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs(1000, 10, 0.2, 3, simulations = 10))
+#   cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs(2500, 10, 0.2, 3, simulations = 10))
+#   write.csv(cum_data, file = "scenario3_atf_qs_02.csv")
+  # cum_data <- data.frame()
+  # cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs( 500, 10, 0.8, 3, simulations = 10))
+  # cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs(1000, 10, 0.8, 3, simulations = 10))
+  # cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs(2500, 10, 0.8, 3, simulations = 10))
+  # write.csv(cum_data, file = "scenario3_atf_qs_08.csv")
+#   
+# }
 
 
 {
   # Scenario 1
-  cum_data <- data.frame()
-  cum_data <- rbind(cum_data, run_custom_sce_simulations_qatf_only( 500, 1, 0.5, 1, simulations = 1))
-  cum_data <- rbind(cum_data, run_custom_sce_simulations_qatf_only(1000, 1, 0.5, 1, simulations = 1))
-  cum_data <- rbind(cum_data, run_custom_sce_simulations_qatf_only(2500, 1, 0.5, 1, simulations = 1))
-  write.csv(cum_data, file = "scenario1_qatf_05.csv")
+  # cum_data <- data.frame()
+  # cum_data <- rbind(cum_data, run_custom_sce_simulations_qatf_only( 500, 10, 0.5, 1, simulations = 10))
+  # cum_data <- rbind(cum_data, run_custom_sce_simulations_qatf_only(1000, 10, 0.5, 1, simulations = 10))
+  # cum_data <- rbind(cum_data, run_custom_sce_simulations_qatf_only(2500, 10, 0.5, 1, simulations = 10))
+  # write.csv(cum_data, file = "scenario1_qatf_05.csv")
   # Scenario 2
   # cum_data <- data.frame()
   # cum_data <- rbind(cum_data, run_custom_sce_simulations_qatf_only( 500, 10, 0.5, 2, simulations = 10))
@@ -802,141 +868,141 @@ run_custom_sce_simulations_qatf_only <- function(n, d, tau, sce, simulations = 1
 ### Edit, add get_mse function to pick lambda
 
 
-# Plot scenario 4
-{
-  vals <- scenario4(2000, 3, 0.5)
-  # vals[[4]] is y_list, vals[[1]] is x_list
-  # out[[2]] is trend_list, out[[3]] is permutation matrix
-  
-  par(mfrow = c(3, 3))
-  lambda_atf <- get_mse(vals[[1]], vals[[2]], vals[[3]], 2000, 3, 2)
-  out <- fit_atf(vals[[1]], vals[[2]], 2000, 3, 2, lambda_atf$LAMBDA)
-  plot(vals[[4]][1, ][out[[3]][1, ]])
-  lines(out[[2]][, 1][out[[3]][1, ]], col = "red")
-  plot(vals[[4]][2, ][out[[3]][2, ]])
-  lines(out[[2]][, 2][out[[3]][2, ]], col = "red")
-  plot(vals[[4]][3, ][out[[3]][3, ]])
-  lines(out[[2]][, 3][out[[3]][3, ]], col = "red")
-  
-  lambda_qass <- get_mse_s(vals[[1]], vals[[2]], vals[[3]], 2000, 3, 0.5)
-  outs <- fit_qass(vals[[1]], vals[[2]], 2000, 3, 0.5, lambda_qass$LAMBDA)
-  plot(vals[[4]][1, ][outs[[3]][1, ]])
-  lines(outs[[2]][, 1][outs[[3]][1, ]], col = "blue")
-  plot(vals[[4]][2, ][outs[[3]][2, ]])
-  lines(outs[[2]][, 2][outs[[3]][2, ]], col = "blue")
-  plot(vals[[4]][3, ][outs[[3]][3, ]])
-  lines(outs[[2]][, 3][outs[[3]][3, ]], col = "blue")
-  
-  lambda_qatf <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 2000, 3, 0.5, 2)
-  outq <- fit_qatf(vals[[1]], vals[[2]], 2000, 3, 0.5, 2, lambda_qatf$LAMBDA)
-  plot(vals[[4]][1, ][outq[[3]][1, ]])
-  lines(outq[[2]][, 1][outq[[3]][1, ]], col = "purple")
-  plot(vals[[4]][2, ][outq[[3]][2, ]])
-  lines(outq[[2]][, 2][outq[[3]][2, ]], col = "purple")
-  plot(vals[[4]][3, ][outq[[3]][3, ]])
-  lines(outq[[2]][, 3][outq[[3]][3, ]], col = "purple")
-}
-
-# Plot scenario 5
-{
-  vals <- scenario5(1000, 4, 0.5)
-  # vals[[4]] is y_list, vals[[1]] is x_list
-  # out[[2]] is trend_list, out[[3]] is permutation matrix
-  
-  par(mfrow = c(3, 4))
-  lambda_atf <- get_mse(vals[[1]], vals[[2]], vals[[3]], 1000, 4, 2)
-  out <- fit_atf(vals[[1]], vals[[2]], 1000, 4, 2, lambda_atf$LAMBDA)
-  plot(vals[[4]][1, ][out[[3]][1, ]])
-  lines(out[[2]][, 1][out[[3]][1, ]], col = "red")
-  plot(vals[[4]][2, ][out[[3]][2, ]])
-  lines(out[[2]][, 2][out[[3]][2, ]], col = "red")
-  plot(vals[[4]][3, ][out[[3]][3, ]])
-  lines(out[[2]][, 3][out[[3]][3, ]], col = "red")
-  plot(vals[[4]][4, ][out[[3]][4, ]])
-  lines(out[[2]][, 4][out[[3]][4, ]], col = "red")
-  
-  lambda_qass <- get_mse_s(vals[[1]], vals[[2]], vals[[3]], 1000, 4, 0.5)
-  outs <- fit_qass(vals[[1]], vals[[2]], 1000, 4, 0.5, lambda_qass$LAMBDA)
-  plot(vals[[4]][1, ][outs[[3]][1, ]])
-  lines(outs[[2]][, 1][outs[[3]][1, ]], col = "blue")
-  plot(vals[[4]][2, ][outs[[3]][2, ]])
-  lines(outs[[2]][, 2][outs[[3]][2, ]], col = "blue")
-  plot(vals[[4]][3, ][outs[[3]][3, ]])
-  lines(outs[[2]][, 3][outs[[3]][3, ]], col = "blue")
-  plot(vals[[4]][4, ][outs[[3]][4, ]])
-  lines(outs[[2]][, 4][outs[[3]][4, ]], col = "blue")
-  
-  lambda_qatf <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, 4, 0.5, 2)
-  outq <- fit_qatf(vals[[1]], vals[[2]], 1000, 4, 0.5, 2, lambda_qatf$LAMBDA)
-  plot(vals[[4]][1, ][outq[[3]][1, ]])
-  lines(outq[[2]][, 1][outq[[3]][1, ]], col = "purple")
-  plot(vals[[4]][2, ][outq[[3]][2, ]])
-  lines(outq[[2]][, 2][outq[[3]][2, ]], col = "purple")
-  plot(vals[[4]][3, ][outq[[3]][3, ]])
-  lines(outq[[2]][, 3][outq[[3]][3, ]], col = "purple")
-  plot(vals[[4]][4, ][outq[[3]][4, ]])
-  lines(outq[[2]][, 4][outq[[3]][4, ]], col = "purple")
-}
-
-# Plot scenario 6
-{
-  vals <- scenario6(1000, 2, 0.5)
-  # vals[[4]] is y_list, vals[[1]] is x_list
-  # out[[2]] is trend_list, out[[3]] is permutation matrix
-  
-  lambda_qatf <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, 2, 0.5, 2)
-  outq <- fit_qatf(vals[[1]], vals[[2]], 1000, 2, 0.5, 2, lambda_qatf$LAMBDA)
-  plot <- plot_ly(x = ~vals[[1]][1, ], y = ~vals[[1]][2, ], z = ~vals[[3]], 
-                  type = "scatter3d", mode = "markers", 
-                  marker = list(size = 3, color = ~vals[[3]], colorscale = 'Viridis')) %>%
-    layout(scene = list(
-      xaxis = list(title = "x1"),
-      yaxis = list(title = "x2"),
-      zaxis = list(title = "true y")
-    ))
-  
-  print(plot)
-  
-  plot <- plot_ly(x = ~vals[[1]][1, ], y = ~vals[[1]][2, ], z = ~vals[[2]], 
-                  type = "scatter3d", mode = "markers", 
-                  marker = list(size = 3, color = ~vals[[2]], colorscale = 'Viridis')) %>%
-    layout(scene = list(
-      xaxis = list(title = "x1"),
-      yaxis = list(title = "x2"),
-      zaxis = list(title = "noisy data")
-    ))
-  
-  print(plot)
-  
-  plot <- plot_ly(x = ~vals[[1]][1, ], y = ~vals[[1]][2, ], z = ~outq[[1]], 
-                  type = "scatter3d", mode = "markers", 
-                  marker = list(size = 3, color = ~outq[[1]], colorscale = 'Viridis')) %>%
-    layout(scene = list(
-      xaxis = list(title = "x1"),
-      yaxis = list(title = "x2"),
-      zaxis = list(title = "fit")
-    ))
-  
-  print(plot)
-  
-  
-}
-
-
-# an example plot
-par(mfrow = c(1, 1))
-# plot(vals[[2]], col = "black", pch = 19, cex = 0.5, ylab = "data", 
-#      ylim = c(-15, 15))
-plot(vals[[2]], type = "l", col = "black", lwd = 3, lty = 2)
-lines(QATF1$FIT, col = "red", lwd = 3)
-lines(QATF2$FIT, col = "blue", lwd = 3)
-
-legend("topleft", 
-       legend = c("True Quantile", "QATF1", "QATF2"),  # Labels for the lines
-       col = c("black", "red", "blue"),       # Line colors
-       lwd = 3,                # Line types (dashed)
-       lty = c(3, 1, 1),
-       bty = "n"                      # No border around the legend
-)
+# # Plot scenario 4
+# {
+#   vals <- scenario4(2000, 3, 0.5)
+#   # vals[[4]] is y_list, vals[[1]] is x_list
+#   # out[[2]] is trend_list, out[[3]] is permutation matrix
+# 
+#   par(mfrow = c(3, 3))
+#   lambda_atf <- get_mse(vals[[1]], vals[[2]], vals[[3]], 2000, 3, 2)
+#   out <- fit_atf(vals[[1]], vals[[2]], 2000, 3, 2, lambda_atf$LAMBDA)
+#   plot(vals[[4]][1, ][out[[3]][1, ]])
+#   lines(out[[2]][, 1][out[[3]][1, ]], col = "red")
+#   plot(vals[[4]][2, ][out[[3]][2, ]])
+#   lines(out[[2]][, 2][out[[3]][2, ]], col = "red")
+#   plot(vals[[4]][3, ][out[[3]][3, ]])
+#   lines(out[[2]][, 3][out[[3]][3, ]], col = "red")
+# 
+#   lambda_qass <- get_mse_s(vals[[1]], vals[[2]], vals[[3]], 2000, 3, 0.5)
+#   outs <- fit_qass(vals[[1]], vals[[2]], 2000, 3, 0.5, lambda_qass$LAMBDA)
+#   plot(vals[[4]][1, ][outs[[3]][1, ]])
+#   lines(outs[[2]][, 1][outs[[3]][1, ]], col = "blue")
+#   plot(vals[[4]][2, ][outs[[3]][2, ]])
+#   lines(outs[[2]][, 2][outs[[3]][2, ]], col = "blue")
+#   plot(vals[[4]][3, ][outs[[3]][3, ]])
+#   lines(outs[[2]][, 3][outs[[3]][3, ]], col = "blue")
+# 
+#   lambda_qatf <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 2000, 3, 0.5, 2)
+#   outq <- fit_qatf(vals[[1]], vals[[2]], 2000, 3, 0.5, 2, lambda_qatf$LAMBDA)
+#   plot(vals[[4]][1, ][outq[[3]][1, ]])
+#   lines(outq[[2]][, 1][outq[[3]][1, ]], col = "purple")
+#   plot(vals[[4]][2, ][outq[[3]][2, ]])
+#   lines(outq[[2]][, 2][outq[[3]][2, ]], col = "purple")
+#   plot(vals[[4]][3, ][outq[[3]][3, ]])
+#   lines(outq[[2]][, 3][outq[[3]][3, ]], col = "purple")
+# }
+# 
+# # Plot scenario 5
+# {
+#   vals <- scenario5(1000, 4, 0.5)
+#   # vals[[4]] is y_list, vals[[1]] is x_list
+#   # out[[2]] is trend_list, out[[3]] is permutation matrix
+# 
+#   par(mfrow = c(3, 4))
+#   lambda_atf <- get_mse(vals[[1]], vals[[2]], vals[[3]], 1000, 4, 2)
+#   out <- fit_atf(vals[[1]], vals[[2]], 1000, 4, 2, lambda_atf$LAMBDA)
+#   plot(vals[[4]][1, ][out[[3]][1, ]])
+#   lines(out[[2]][, 1][out[[3]][1, ]], col = "red")
+#   plot(vals[[4]][2, ][out[[3]][2, ]])
+#   lines(out[[2]][, 2][out[[3]][2, ]], col = "red")
+#   plot(vals[[4]][3, ][out[[3]][3, ]])
+#   lines(out[[2]][, 3][out[[3]][3, ]], col = "red")
+#   plot(vals[[4]][4, ][out[[3]][4, ]])
+#   lines(out[[2]][, 4][out[[3]][4, ]], col = "red")
+# 
+#   lambda_qass <- get_mse_s(vals[[1]], vals[[2]], vals[[3]], 1000, 4, 0.5)
+#   outs <- fit_qass(vals[[1]], vals[[2]], 1000, 4, 0.5, lambda_qass$LAMBDA)
+#   plot(vals[[4]][1, ][outs[[3]][1, ]])
+#   lines(outs[[2]][, 1][outs[[3]][1, ]], col = "blue")
+#   plot(vals[[4]][2, ][outs[[3]][2, ]])
+#   lines(outs[[2]][, 2][outs[[3]][2, ]], col = "blue")
+#   plot(vals[[4]][3, ][outs[[3]][3, ]])
+#   lines(outs[[2]][, 3][outs[[3]][3, ]], col = "blue")
+#   plot(vals[[4]][4, ][outs[[3]][4, ]])
+#   lines(outs[[2]][, 4][outs[[3]][4, ]], col = "blue")
+# 
+#   lambda_qatf <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, 4, 0.5, 2)
+#   outq <- fit_qatf(vals[[1]], vals[[2]], 1000, 4, 0.5, 2, lambda_qatf$LAMBDA)
+#   plot(vals[[4]][1, ][outq[[3]][1, ]])
+#   lines(outq[[2]][, 1][outq[[3]][1, ]], col = "purple")
+#   plot(vals[[4]][2, ][outq[[3]][2, ]])
+#   lines(outq[[2]][, 2][outq[[3]][2, ]], col = "purple")
+#   plot(vals[[4]][3, ][outq[[3]][3, ]])
+#   lines(outq[[2]][, 3][outq[[3]][3, ]], col = "purple")
+#   plot(vals[[4]][4, ][outq[[3]][4, ]])
+#   lines(outq[[2]][, 4][outq[[3]][4, ]], col = "purple")
+# }
+# 
+# # Plot scenario 6
+# {
+#   vals <- scenario6(1000, 2, 0.5)
+#   # vals[[4]] is y_list, vals[[1]] is x_list
+#   # out[[2]] is trend_list, out[[3]] is permutation matrix
+# 
+#   lambda_qatf <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, 2, 0.5, 2)
+#   outq <- fit_qatf(vals[[1]], vals[[2]], 1000, 2, 0.5, 2, lambda_qatf$LAMBDA)
+#   plot <- plot_ly(x = ~vals[[1]][1, ], y = ~vals[[1]][2, ], z = ~vals[[3]],
+#                   type = "scatter3d", mode = "markers",
+#                   marker = list(size = 3, color = ~vals[[3]], colorscale = 'Viridis')) %>%
+#     layout(scene = list(
+#       xaxis = list(title = "x1"),
+#       yaxis = list(title = "x2"),
+#       zaxis = list(title = "true y")
+#     ))
+# 
+#   print(plot)
+# 
+#   plot <- plot_ly(x = ~vals[[1]][1, ], y = ~vals[[1]][2, ], z = ~vals[[2]],
+#                   type = "scatter3d", mode = "markers",
+#                   marker = list(size = 3, color = ~vals[[2]], colorscale = 'Viridis')) %>%
+#     layout(scene = list(
+#       xaxis = list(title = "x1"),
+#       yaxis = list(title = "x2"),
+#       zaxis = list(title = "noisy data")
+#     ))
+# 
+#   print(plot)
+# 
+#   plot <- plot_ly(x = ~vals[[1]][1, ], y = ~vals[[1]][2, ], z = ~outq[[1]],
+#                   type = "scatter3d", mode = "markers",
+#                   marker = list(size = 3, color = ~outq[[1]], colorscale = 'Viridis')) %>%
+#     layout(scene = list(
+#       xaxis = list(title = "x1"),
+#       yaxis = list(title = "x2"),
+#       zaxis = list(title = "fit")
+#     ))
+# 
+#   print(plot)
+# 
+# 
+# }
+# 
+# 
+# # an example plot
+# par(mfrow = c(1, 1))
+# # plot(vals[[2]], col = "black", pch = 19, cex = 0.5, ylab = "data",
+# #      ylim = c(-15, 15))
+# plot(vals[[2]], type = "l", col = "black", lwd = 3, lty = 2)
+# lines(QATF1$FIT, col = "red", lwd = 3)
+# lines(QATF2$FIT, col = "blue", lwd = 3)
+# 
+# legend("topleft",
+#        legend = c("True Quantile", "QATF1", "QATF2"),  # Labels for the lines
+#        col = c("black", "red", "blue"),       # Line colors
+#        lwd = 3,                # Line types (dashed)
+#        lty = c(3, 1, 1),
+#        bty = "n"                      # No border around the legend
+# )
 
 
