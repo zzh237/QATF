@@ -7,6 +7,18 @@
 # install.packages("fields")
 # install.packages("plotly")
 
+x <- seq(0, 1, length.out = 2000)
+par(mfrow = c(3, 3))
+plot(sin(2 * pi / (x + 0.1)^(1 / 10)))
+plot(sin(2 * pi / (x + 0.1)^(2 / 10)))
+plot(sin(2 * pi / (x + 0.1)^(3 / 10)))
+plot(sin(2 * pi / (x + 0.1)^(4 / 10)))
+plot(sin(2 * pi / (x + 0.1)^(5 / 10)))
+plot(sin(2 * pi / (x + 0.1)^(6 / 10)))
+plot(sin(2 * pi / (x + 0.1)^(7 / 10)))
+plot(sin(2 * pi / (x + 0.1)^(8 / 10)))
+plot(sin(2 * pi / (x + 0.1)^(9 / 10)))
+
 
 library(detrendr)
 # trace(get_model, edit=TRUE)
@@ -15,10 +27,9 @@ library(fields)
 library(plotly)
 library(tidyverse)
 
-
 # rm(list = ls())
-prior_results <- read.csv("MSEs.csv")
-prior_results_qs <- read.csv("MSEswqs.csv")
+# prior_results <- read.csv("MSEs.csv")
+# prior_results_qs <- read.csv("MSEswqs.csv")
 
 MSE <- function(a, b){
   len = length(a)
@@ -868,6 +879,159 @@ run_custom_sce_simulations_atf_qs <- function(n, d, tau, sce, simulations = 1) {
 ### Edit, add get_mse function to pick lambda
 
 
+<<<<<<< Updated upstream
+=======
+<<<<<<< HEAD
+# Plot scenario 4
+{
+  vals <- scenario4(2000, 3, 0.5)
+  # vals[[4]] is y_list, vals[[1]] is x_list
+  # out[[2]] is trend_list, out[[3]] is permutation matrix
+  
+  par(mfrow = c(3, 3))
+  lambda_atf <- get_mse(vals[[1]], vals[[2]], vals[[3]], 2000, 3, 2)
+  out <- fit_atf(vals[[1]], vals[[2]], 2000, 3, 2, lambda_atf$LAMBDA)
+  plot(vals[[4]][1, ][out[[3]][1, ]])
+  lines(out[[2]][, 1][out[[3]][1, ]], col = "red")
+  plot(vals[[4]][2, ][out[[3]][2, ]])
+  lines(out[[2]][, 2][out[[3]][2, ]], col = "red")
+  plot(vals[[4]][3, ][out[[3]][3, ]])
+  lines(out[[2]][, 3][out[[3]][3, ]], col = "red")
+  
+  lambda_qass <- get_mse_s(vals[[1]], vals[[2]], vals[[3]], 2000, 3, 0.5)
+  outs <- fit_qass(vals[[1]], vals[[2]], 2000, 3, 0.5, lambda_qass$LAMBDA)
+  plot(vals[[4]][1, ][outs[[3]][1, ]])
+  lines(outs[[2]][, 1][outs[[3]][1, ]], col = "blue")
+  plot(vals[[4]][2, ][outs[[3]][2, ]])
+  lines(outs[[2]][, 2][outs[[3]][2, ]], col = "blue")
+  plot(vals[[4]][3, ][outs[[3]][3, ]])
+  lines(outs[[2]][, 3][outs[[3]][3, ]], col = "blue")
+  
+  lambda_qatf <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 2000, 3, 0.5, 2)
+  outq <- fit_qatf(vals[[1]], vals[[2]], 2000, 3, 0.5, 2, lambda_qatf$LAMBDA)
+  plot(vals[[4]][1, ][outq[[3]][1, ]])
+  lines(outq[[2]][, 1][outq[[3]][1, ]], col = "purple")
+  plot(vals[[4]][2, ][outq[[3]][2, ]])
+  lines(outq[[2]][, 2][outq[[3]][2, ]], col = "purple")
+  plot(vals[[4]][3, ][outq[[3]][3, ]])
+  lines(outq[[2]][, 3][outq[[3]][3, ]], col = "purple")
+}
+
+# Plot scenario 5
+{
+  vals <- scenario5(1000, 4, 0.5)
+  # vals[[4]] is y_list, vals[[1]] is x_list
+  # out[[2]] is trend_list, out[[3]] is permutation matrix
+  
+  par(mfrow = c(1, 4))
+  # lambda_atf <- get_mse(vals[[1]], vals[[2]], vals[[3]], 1000, 4, 2)
+  # out <- fit_atf(vals[[1]], vals[[2]], 1000, 4, 2, lambda_atf$LAMBDA)
+  # plot(vals[[4]][1, ][out[[3]][1, ]])
+  # lines(out[[2]][, 1][out[[3]][1, ]], col = "red")
+  # plot(vals[[4]][2, ][out[[3]][2, ]])
+  # lines(out[[2]][, 2][out[[3]][2, ]], col = "red")
+  # plot(vals[[4]][3, ][out[[3]][3, ]])
+  # lines(out[[2]][, 3][out[[3]][3, ]], col = "red")
+  # plot(vals[[4]][4, ][out[[3]][4, ]])
+  # lines(out[[2]][, 4][out[[3]][4, ]], col = "red")
+  # 
+  # lambda_qass <- get_mse_s(vals[[1]], vals[[2]], vals[[3]], 1000, 4, 0.5)
+  # outs <- fit_qass(vals[[1]], vals[[2]], 1000, 4, 0.5, lambda_qass$LAMBDA)
+  # plot(vals[[4]][1, ][outs[[3]][1, ]])
+  # lines(outs[[2]][, 1][outs[[3]][1, ]], col = "blue")
+  # plot(vals[[4]][2, ][outs[[3]][2, ]])
+  # lines(outs[[2]][, 2][outs[[3]][2, ]], col = "blue")
+  # plot(vals[[4]][3, ][outs[[3]][3, ]])
+  # lines(outs[[2]][, 3][outs[[3]][3, ]], col = "blue")
+  # plot(vals[[4]][4, ][outs[[3]][4, ]])
+  # lines(outs[[2]][, 4][outs[[3]][4, ]], col = "blue")
+  
+  lambda_qatf <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, 4, 0.5, 2)
+  outq <- fit_qatf(vals[[1]], vals[[2]], 1000, 4, 0.5, 2, lambda_qatf$LAMBDA)
+  # Set the layout to have 4 plots in a 1x4 grid
+  par(mfrow = c(1, 4), mar = c(2, 2, 2, 2), oma = c(0, 0, 0, 0))
+  
+  # Plot 1
+  plot(vals[[4]][1, ][outq[[3]][1, ]], xaxt = 'n', yaxt = 'n', main = "", xlab = "", ylab = "")
+  lines(outq[[2]][, 1][outq[[3]][1, ]], col = "blue", lwd = 2)
+  
+  # Plot 2
+  plot(vals[[4]][2, ][outq[[3]][2, ]], xaxt = 'n', yaxt = 'n', main = "", xlab = "", ylab = "")
+  lines(outq[[2]][, 2][outq[[3]][2, ]], col = "blue", lwd = 2)
+  
+  # Plot 3
+  plot(vals[[4]][3, ][outq[[3]][3, ]], xaxt = 'n', yaxt = 'n', main = "", xlab = "", ylab = "")
+  lines(outq[[2]][, 3][outq[[3]][3, ]], col = "blue", lwd = 2)
+  
+  # Plot 4
+  plot(vals[[4]][4, ][outq[[3]][4, ]], xaxt = 'n', yaxt = 'n', main = "", xlab = "", ylab = "")
+  lines(outq[[2]][, 4][outq[[3]][4, ]], col = "blue", lwd = 2)
+
+  
+  }
+
+# Plot scenario 6
+{
+  vals <- scenario6(2500, 2, 0.5)
+  # vals[[4]] is y_list, vals[[1]] is x_list
+  # out[[2]] is trend_list, out[[3]] is permutation matrix
+  
+  lambda_qatf <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 2500, 2, 0.5, 2)
+  outq <- fit_qatf(vals[[1]], vals[[2]], 2500, 2, 0.5, 2, lambda_qatf$LAMBDA)
+  plot <- plot_ly(x = ~vals[[1]][1, ], y = ~vals[[1]][2, ], z = ~vals[[3]], 
+                  type = "scatter3d", mode = "markers", 
+                  marker = list(size = 3, color = ~vals[[3]], colorscale = 'Viridis')) %>%
+    layout(scene = list(
+      xaxis = list(title = "x1"),
+      yaxis = list(title = "x2"),
+      zaxis = list(title = "true y")
+    ))
+  
+  print(plot)
+  
+  plot <- plot_ly(x = ~vals[[1]][1, ], y = ~vals[[1]][2, ], z = ~vals[[2]], 
+                  type = "scatter3d", mode = "markers", 
+                  marker = list(size = 3, color = ~vals[[2]], colorscale = 'Viridis')) %>%
+    layout(scene = list(
+      xaxis = list(title = "x1"),
+      yaxis = list(title = "x2"),
+      zaxis = list(title = "noisy data")
+    ))
+  
+  print(plot)
+  
+  plot <- plot_ly(x = ~vals[[1]][1, ], y = ~vals[[1]][2, ], z = ~outq[[1]], 
+                  type = "scatter3d", mode = "markers", 
+                  marker = list(size = 3, color = ~outq[[1]], colorscale = 'Viridis')) %>%
+    layout(scene = list(
+      xaxis = list(title = "x1"),
+      yaxis = list(title = "x2"),
+      zaxis = list(title = "fit")
+    ))
+  
+  print(plot)
+  
+  
+}
+
+
+# an example plot
+par(mfrow = c(1, 1))
+# plot(vals[[2]], col = "black", pch = 19, cex = 0.5, ylab = "data", 
+#      ylim = c(-15, 15))
+plot(vals[[2]], type = "l", col = "black", lwd = 3, lty = 2)
+lines(QATF1$FIT, col = "red", lwd = 3)
+lines(QATF2$FIT, col = "blue", lwd = 3)
+
+legend("topleft", 
+       legend = c("True Quantile", "QATF1", "QATF2"),  # Labels for the lines
+       col = c("black", "red", "blue"),       # Line colors
+       lwd = 3,                # Line types (dashed)
+       lty = c(3, 1, 1),
+       bty = "n"                      # No border around the legend
+)
+=======
+>>>>>>> Stashed changes
 # # Plot scenario 4
 # {
 #   vals <- scenario4(2000, 3, 0.5)
@@ -1004,5 +1168,9 @@ run_custom_sce_simulations_atf_qs <- function(n, d, tau, sce, simulations = 1) {
 #        lty = c(3, 1, 1),
 #        bty = "n"                      # No border around the legend
 # )
+<<<<<<< Updated upstream
+=======
+>>>>>>> 97ea8f9325c4a7342e1fa8bee78b87034ce722f6
+>>>>>>> Stashed changes
 
 
