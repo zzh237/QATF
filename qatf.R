@@ -8,6 +8,7 @@
 # install.packages("plotly")
 
 x <- seq(0, 1, length.out = 2000)
+
 par(mfrow = c(3, 3))
 plot(sin(2 * pi / (x + 0.1)^(1 / 10)))
 plot(sin(2 * pi / (x + 0.1)^(2 / 10)))
@@ -413,13 +414,13 @@ scenario2 <- function(n, d, tau) {
   return(list(x_list, y, y_star_q))
 }
 scenario3 <- function(n, d, tau) {
-  # Scenario 2
+  # Scenario 3
   # i <- 1:n
   # g_0(x) <- sin(2*pi/(x + 0.1)**(j/10))
   # x drawn randomly from uniform distribution for each component
   # f_0 <- a_j*g_0 - b_j w/ b_j s.t. mean(f_0) = 0 and a_j s.t. norm(f_0) = 1
   # y = f_0(x) + epsilon_i
-  # epsilon_i cauchy errors
+  # epsilon_i lognormal
   
   
   if (length(n) != 1 || length(d) != 1 || length(tau) != 1) {
@@ -444,8 +445,8 @@ scenario3 <- function(n, d, tau) {
   y_star <- colSums(y_list)
   
   # Cauchy Errors
-  y <- y_star + rlaplace(n, 0, 1)
-  y_star_q <- y_star + qlaplace(tau, 0, 1)
+  y <- y_star + rlnorm(n, 0, 1)
+  y_star_q <- y_star + qlnorm(tau, 0, 1)
   
   if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
   return(list(x_list, y, y_star_q))
@@ -1065,8 +1066,7 @@ legend("topleft",
        lty = c(3, 1, 1),
        bty = "n"                      # No border around the legend
 )
-=======
->>>>>>> Stashed changes
+
 # # Plot scenario 4
 # {
 #   vals <- scenario4(2000, 3, 0.5)
