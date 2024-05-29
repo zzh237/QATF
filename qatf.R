@@ -26,6 +26,7 @@ library(glmgen)
 library(fields)
 library(plotly)
 library(tidyverse)
+library(extraDistr)
 
 # rm(list = ls())
 # prior_results <- read.csv("MSEs.csv")
@@ -412,6 +413,44 @@ scenario2 <- function(n, d, tau) {
   return(list(x_list, y, y_star_q))
 }
 scenario3 <- function(n, d, tau) {
+  # Scenario 2
+  # i <- 1:n
+  # g_0(x) <- sin(2*pi/(x + 0.1)**(j/10))
+  # x drawn randomly from uniform distribution for each component
+  # f_0 <- a_j*g_0 - b_j w/ b_j s.t. mean(f_0) = 0 and a_j s.t. norm(f_0) = 1
+  # y = f_0(x) + epsilon_i
+  # epsilon_i cauchy errors
+  
+  
+  if (length(n) != 1 || length(d) != 1 || length(tau) != 1) {
+    stop("Scenario function is only suitable for a single scenario.\n
+          Please ensure inputs are each scalar values.")
+  }
+  
+  x_list <- matrix(NA, nrow = d, ncol = n)
+  y_list <- matrix(NA, nrow = d, ncol = n)
+  
+  for (j in 1:d) {
+    x_list[j, ] <- runif(n, 0, 1)
+    
+    # Doppler-like
+    g_0 <- sin(2 * pi / (x_list[j, ] + 0.1)^(j / 10))
+    b_j <- mean(g_0)
+    a_j <- 1 / (norm(g_0 - b_j, type = "F") / sqrt(n))
+    y_list[j, ] <- a_j * g_0 - a_j * b_j
+  }
+  
+  # Sum of each column of y_list
+  y_star <- colSums(y_list)
+  
+  # Cauchy Errors
+  y <- y_star + rlaplace(n, 0, 1)
+  y_star_q <- y_star + qlaplace(tau, 0, 1)
+  
+  if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
+  return(list(x_list, y, y_star_q))
+}
+scenario4 <- function(n, d, tau) {
   # Scenario 3
   # i <- 1:n
   # g_0(x) <- sin(2*pi/(x + 0.1)**(j/10))
@@ -451,7 +490,7 @@ scenario3 <- function(n, d, tau) {
   return(list(x_list, y, y_star_q))
 }
 
-scenario4 <- function(n, d=3, tau) {
+scenario5 <- function(n, d=3, tau) {
   # Scenario 7
   # i <- 1:n
   # g_1(x) <- (cos(6*pi*x) + 0.1)
@@ -498,7 +537,7 @@ scenario4 <- function(n, d=3, tau) {
   if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
   return(list(x_list, y, y_star_q, y_list))
 }
-scenario5 <- function(n, d=5, tau) {
+scenario6 <- function(n, d=5, tau) {
   # Scenario 7
   # i <- 1:n
   # g_1(x) <- −(t−1/2)**2
@@ -547,7 +586,7 @@ scenario5 <- function(n, d=5, tau) {
   if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
   return(list(x_list, y, y_star_q, y_list))
 }
-scenario6 <- function(n, d=2, tau) {
+scenario7 <- function(n, d=2, tau) {
   if (length(n) != 1 || length(d) != 1 || length(tau) != 1) {
     stop("Scenario function is only suitable for a single scenario. Please ensure inputs are each scalar values.")
   }
@@ -878,13 +917,9 @@ run_custom_sce_simulations_atf_qs <- function(n, d, tau, sce, simulations = 1) {
 
 ### Edit, add get_mse function to pick lambda
 
-
-<<<<<<< Updated upstream
-=======
-<<<<<<< HEAD
-# Plot scenario 4
+# Plot scenario 5
 {
-  vals <- scenario4(2000, 3, 0.5)
+  vals <- scenario5(2000, 3, 0.5)
   # vals[[4]] is y_list, vals[[1]] is x_list
   # out[[2]] is trend_list, out[[3]] is permutation matrix
   
@@ -917,9 +952,9 @@ run_custom_sce_simulations_atf_qs <- function(n, d, tau, sce, simulations = 1) {
   lines(outq[[2]][, 3][outq[[3]][3, ]], col = "purple")
 }
 
-# Plot scenario 5
+# Plot scenario 6
 {
-  vals <- scenario5(1000, 4, 0.5)
+  vals <- scenario6(1000, 4, 0.5)
   # vals[[4]] is y_list, vals[[1]] is x_list
   # out[[2]] is trend_list, out[[3]] is permutation matrix
   
@@ -970,9 +1005,9 @@ run_custom_sce_simulations_atf_qs <- function(n, d, tau, sce, simulations = 1) {
   
   }
 
-# Plot scenario 6
+# Plot scenario 7
 {
-  vals <- scenario6(2500, 2, 0.5)
+  vals <- scenario8(2500, 2, 0.5)
   # vals[[4]] is y_list, vals[[1]] is x_list
   # out[[2]] is trend_list, out[[3]] is permutation matrix
   
