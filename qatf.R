@@ -7,8 +7,10 @@
 # install.packages("fields")
 # install.packages("plotly")
 
-x <- seq(0, 1, length.out = 2000)
+x <- seq(0, 10, length.out = 20000)
+mean(rlnorm(10000, 0, 1) - exp(1/2))
 
+plot(dlnorm(x, 0, 1)~x)
 par(mfrow = c(3, 3))
 plot(sin(2 * pi / (x + 0.1)^(1 / 10)))
 plot(sin(2 * pi / (x + 0.1)^(2 / 10)))
@@ -413,7 +415,7 @@ scenario2 <- function(n, d, tau) {
   if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
   return(list(x_list, y, y_star_q))
 }
-scenario3 <- function(n, d, tau) {
+scenario3mean <- function(n, d, tau) {
   # Scenario 3
   # i <- 1:n
   # g_0(x) <- sin(2*pi/(x + 0.1)**(j/10))
@@ -445,10 +447,48 @@ scenario3 <- function(n, d, tau) {
   y_star <- colSums(y_list)
   
   # Cauchy Errors
-  y <- y_star + rlnorm(n, 0, 1)
-  y_star_q <- y_star + qlnorm(tau, 0, 1)
+  y <- y_star + rlnorm(n, 0, 1) - exp(1/2)
+  y_star_q <- y_star + qlnorm(tau, 0, 1) - exp(1/2)
   
-  if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
+  if (tau != 0.5) { warning("Skewed Distribution. This is for ATF")}
+  return(list(x_list, y, y_star_q))
+}
+scenario3med <- function(n, d, tau) {
+  # Scenario 3
+  # i <- 1:n
+  # g_0(x) <- sin(2*pi/(x + 0.1)**(j/10))
+  # x drawn randomly from uniform distribution for each component
+  # f_0 <- a_j*g_0 - b_j w/ b_j s.t. mean(f_0) = 0 and a_j s.t. norm(f_0) = 1
+  # y = f_0(x) + epsilon_i
+  # epsilon_i lognormal
+  
+  
+  if (length(n) != 1 || length(d) != 1 || length(tau) != 1) {
+    stop("Scenario function is only suitable for a single scenario.\n
+          Please ensure inputs are each scalar values.")
+  }
+  
+  x_list <- matrix(NA, nrow = d, ncol = n)
+  y_list <- matrix(NA, nrow = d, ncol = n)
+  
+  for (j in 1:d) {
+    x_list[j, ] <- runif(n, 0, 1)
+    
+    # Doppler-like
+    g_0 <- sin(2 * pi / (x_list[j, ] + 0.1)^(j / 10))
+    b_j <- mean(g_0)
+    a_j <- 1 / (norm(g_0 - b_j, type = "F") / sqrt(n))
+    y_list[j, ] <- a_j * g_0 - a_j * b_j
+  }
+  
+  # Sum of each column of y_list
+  y_star <- colSums(y_list)
+  
+  # Cauchy Errors
+  y <- y_star + rlnorm(n, 0, 1) - 1
+  y_star_q <- y_star + qlnorm(tau, 0, 1) - 1
+  
+  if (tau != 0.5) { warning("Skewed Distribution. This is for QATF/QSS")}
   return(list(x_list, y, y_star_q))
 }
 scenario4 <- function(n, d, tau) {
@@ -1203,9 +1243,5 @@ legend("topleft",
 #        lty = c(3, 1, 1),
 #        bty = "n"                      # No border around the legend
 # )
-<<<<<<< Updated upstream
-=======
->>>>>>> 97ea8f9325c4a7342e1fa8bee78b87034ce722f6
->>>>>>> Stashed changes
 
 
