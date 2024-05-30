@@ -415,45 +415,7 @@ scenario2 <- function(n, d, tau) {
   if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
   return(list(x_list, y, y_star_q))
 }
-scenario3mean <- function(n, d, tau) {
-  # Scenario 3
-  # i <- 1:n
-  # g_0(x) <- sin(2*pi/(x + 0.1)**(j/10))
-  # x drawn randomly from uniform distribution for each component
-  # f_0 <- a_j*g_0 - b_j w/ b_j s.t. mean(f_0) = 0 and a_j s.t. norm(f_0) = 1
-  # y = f_0(x) + epsilon_i
-  # epsilon_i lognormal
-  
-  
-  if (length(n) != 1 || length(d) != 1 || length(tau) != 1) {
-    stop("Scenario function is only suitable for a single scenario.\n
-          Please ensure inputs are each scalar values.")
-  }
-  
-  x_list <- matrix(NA, nrow = d, ncol = n)
-  y_list <- matrix(NA, nrow = d, ncol = n)
-  
-  for (j in 1:d) {
-    x_list[j, ] <- runif(n, 0, 1)
-    
-    # Doppler-like
-    g_0 <- sin(2 * pi / (x_list[j, ] + 0.1)^(j / 10))
-    b_j <- mean(g_0)
-    a_j <- 1 / (norm(g_0 - b_j, type = "F") / sqrt(n))
-    y_list[j, ] <- a_j * g_0 - a_j * b_j
-  }
-  
-  # Sum of each column of y_list
-  y_star <- colSums(y_list)
-  
-  # Cauchy Errors
-  y <- y_star + rlnorm(n, 0, 1) - exp(1/2)
-  y_star_q <- y_star + qlnorm(tau, 0, 1) - exp(1/2)
-  
-  if (tau != 0.5) { warning("Skewed Distribution. This is for ATF")}
-  return(list(x_list, y, y_star_q))
-}
-scenario3med <- function(n, d, tau) {
+scenario3 <- function(n, d, tau) {
   # Scenario 3
   # i <- 1:n
   # g_0(x) <- sin(2*pi/(x + 0.1)**(j/10))
@@ -487,9 +449,11 @@ scenario3med <- function(n, d, tau) {
   # Cauchy Errors
   y <- y_star + rlnorm(n, 0, 1) - 1
   y_star_q <- y_star + qlnorm(tau, 0, 1) - 1
+  y_avg <- y_star + rlnorm(n, 0, 1) - exp(1/2)
+  y_star_avg <- y_star - exp(1/2)
   
-  if (tau != 0.5) { warning("Skewed Distribution. This is for QATF/QSS")}
-  return(list(x_list, y, y_star_q))
+  if (tau != 0.5) { warning("Skewed Distribution, extra outputs.")}
+  return(list(x_list, y, y_star_q, y_avg, y_star_avg))
 }
 scenario4 <- function(n, d, tau) {
   # Scenario 3
@@ -711,17 +675,26 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1) {
   for (i in 1:simulations) {
     if      (sce == 1) {vals <- scenario1(n, d, tau)}
     else if (sce == 2) {vals <- scenario2(n, d, tau)}
-    else if (sce == 3) {vals <- scenario3(n, d, tau)}
+    else if (sce == 3) {
+      print("scenario 3 splits mean and median")
+      vals <- scenario3med(n, d, tau)
+    }
     else if (sce == 4) {vals <- scenario4(n, d, tau)}
     else if (sce == 5) {vals <- scenario5(n, d, tau)}
     else if (sce == 6) {vals <- scenario6(n, d, tau)}
-    else {stop("Only 6 scenarios at the time of this functions' construction")}
+    else if (sce == 6) {vals <- scenario6(n, d, tau)}
+    else {stop("Only 7 scenarios at the time of this functions' construction")}
     
     # Currently preserving the full output in case we want cool plots
     # Also, only run get_mse for tau = 0.5
     if (tau == 0.5) {
-      ATF1 <- get_mse(vals[[1]], vals[[2]], vals[[3]], n, d, 1, prints = FALSE)
-      ATF2 <- get_mse(vals[[1]], vals[[2]], vals[[3]], n, d, 2, prints = FALSE)
+      if (sce ==3) {
+        ATF1 <- get_mse(vals[[1]], vals[[4]], vals[[5]], n, d, 1, prints = FALSE)
+        ATF2 <- get_mse(vals[[1]], vals[[4]], vals[[5]], n, d, 2, prints = FALSE)
+      } else {
+        ATF1 <- get_mse(vals[[1]], vals[[2]], vals[[3]], n, d, 1, prints = FALSE)
+        ATF2 <- get_mse(vals[[1]], vals[[2]], vals[[3]], n, d, 2, prints = FALSE)
+      }
       ATF1_MSE <- ATF1_MSE + ATF1$MSE
       ATF2_MSE <- ATF2_MSE + ATF2$MSE
       
@@ -768,187 +741,83 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1) {
                     ATF2  = format(ATF2_MSE , scientific = FALSE, digits = 6)))
   
 }
-run_custom_sce_simulations_qatf_only <- function(n, d, tau, sce, simulations = 1) {
-  # This function only exists for us to make constructing the data frame quicker
-  # Wrapper function is set to run with fixed k = 1 and 2, 
-  # and append results to formatted data frame.
-  
 
-  QATF1_MSE <- 0
-  QATF2_MSE <- 0
-  for (i in 1:simulations) {
-    if      (sce == 1) {vals <- scenario1(n, d, tau)}
-    else if (sce == 2) {vals <- scenario2(n, d, tau)}
-    else if (sce == 3) {vals <- scenario3(n, d, tau)}
-    else if (sce == 4) {vals <- scenario4(n, d, tau)}
-    else if (sce == 5) {vals <- scenario5(n, d, tau)}
-    else if (sce == 6) {vals <- scenario6(n, d, tau)}
-    else {stop("Only 6 scenarios at the time of this functions' construction")}
-    
-    QATF1 <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], n, d, tau, 1, prints = FALSE)
-    QATF2 <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], n, d, tau, 2, prints = FALSE)
-    QATF1_MSE <- QATF1_MSE + QATF1$MSE
-    QATF2_MSE <- QATF2_MSE + QATF2$MSE
-    
-    cat("mse for QATF1 was ", QATF1$MSE, "at lambda = ", QATF1$LAMBDA, "\n")
-    cat("mse for QATF2 was ", QATF2$MSE, "at lambda = ", QATF2$LAMBDA, "\n")
-    if (simulations != 1) {cat("finished simulation ", i, "\n")}
-  }
-
-  QATF1_MSE <- QATF1_MSE / simulations
-  QATF2_MSE <- QATF2_MSE / simulations
-  
-  return(data.frame(n = n,
-                    Scenario = sce,
-                    d = d,
-                    tau = tau,
-                    Simulations = simulations,
-                    QATF1 = format(QATF1_MSE, scientific = FALSE, digits = 6),
-                    QATF2 = format(QATF2_MSE, scientific = FALSE, digits = 6)))
-  
-}
-run_custom_sce_simulations_atf_qs <- function(n, d, tau, sce, simulations = 1) {
-  # This function only exists for us to make constructing the data frame quicker
-  # Wrapper function is set to run with fixed k = 1 and 2, 
-  # and append results to formatted data frame.
-  
-  ATF1_MSE <- 0
-  ATF2_MSE <- 0
-  QS_MSE <- 0
-  for (i in 1:simulations) {
-    if      (sce == 1) {vals <- scenario1(n, d, tau)}
-    else if (sce == 2) {vals <- scenario2(n, d, tau)}
-    else if (sce == 3) {vals <- scenario3(n, d, tau)}
-    else if (sce == 4) {vals <- scenario4(n, d, tau)}
-    else if (sce == 5) {vals <- scenario5(n, d, tau)}
-    else if (sce == 6) {vals <- scenario6(n, d, tau)}
-    else {stop("Only 6 scenarios at the time of this functions' construction")}
-    
-    # Currently preserving the full output in case we want cool plots
-    # Also, only run get_mse for tau = 0.5
-    if (tau == 0.5) {
-      ATF1 <- get_mse(vals[[1]], vals[[2]], vals[[3]], n, d, 1, prints = FALSE)
-      ATF2 <- get_mse(vals[[1]], vals[[2]], vals[[3]], n, d, 2, prints = FALSE)
-      ATF1_MSE <- ATF1_MSE + ATF1$MSE
-      ATF2_MSE <- ATF2_MSE + ATF2$MSE
-      
-      cat("mse for ATF1 was ", ATF1$MSE, "at lambda = ", ATF1$LAMBDA, "\n")
-      cat("mse for ATF2 was ", ATF2$MSE, "at lambda = ", ATF2$LAMBDA, "\n")
-    } else {
-      cat("not running ATF1 or ATF2 since tau != 0.5\n")
-    }
-    
-    QS <- get_mse_s(vals[[1]], vals[[2]], vals[[3]], n, d, tau, prints = FALSE)
-    QS_MSE <- QS_MSE + QS$MSE
-    cat("mse for QS was ", QS$MSE, "at lambda = ", QS$LAMBDA, "\n")
-    
-    
-    if (simulations != 1) {cat("finished simulation ", i, "\n")}
-  }
-  
-  if (tau == 0.5) {
-    ATF1_MSE <- ATF1_MSE / simulations
-    ATF2_MSE <- ATF2_MSE / simulations
-  } else {
-    ATF1_MSE <- NA
-    ATF2_MSE <- NA
-  }
-  QS_MSE <- QS_MSE / simulations
-  
-  return(data.frame(n = n,
-                    Scenario = sce,
-                    d = d,
-                    tau = tau,
-                    Simulations = simulations,
-                    QS    = format(QS_MSE   , scientific = FALSE, digits = 6),
-                    ATF1  = format(ATF1_MSE , scientific = FALSE, digits = 6),
-                    ATF2  = format(ATF2_MSE , scientific = FALSE, digits = 6)))
-  
-}
 # Construct Table
-# {
-#   # Scenario 1
-#   cum_data <- data.frame()
-#   cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs( 500, 10, 0.5, 1, simulations = 10))
-#   cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs(1000, 10, 0.5, 1, simulations = 10))
-#   cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs(2500, 10, 0.5, 1, simulations = 10))
-#   write.csv(cum_data, file = "scenario1_atf_qs_05.csv")
-#   # Scenario 2
-  # cum_data <- data.frame()
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs( 500, 10, 0.5, 2, simulations = 10))
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs(1000, 10, 0.5, 2, simulations = 10))
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs(2500, 10, 0.5, 2, simulations = 10))
-  # write.csv(cum_data, file = "scenario2_atf_qs_05.csv")
-  # cum_data <- data.frame()
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs( 500, 10, 0.2, 2, simulations = 10))
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs(1000, 10, 0.2, 2, simulations = 10))
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs(2500, 10, 0.2, 2, simulations = 10))
-  # write.csv(cum_data, file = "scenario2_atf_qs_02.csv")
-  cum_data <- data.frame()
-  cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs( 500, 10, 0.8, 2, simulations = 10))
-  cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs(1000, 10, 0.8, 2, simulations = 10))
-  cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs(2500, 10, 0.8, 2, simulations = 10))
-  write.csv(cum_data, file = "scenario2_atf_qs_08.csv")
-#   # Scenario 3
-#   cum_data <- data.frame()
-#   cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs( 500, 10, 0.5, 3, simulations = 10))
-#   cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs(1000, 10, 0.5, 3, simulations = 10))
-#   cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs(2500, 10, 0.5, 3, simulations = 10))
-#   write.csv(cum_data, file = "scenario3_atf_qs_05.csv")
-#   cum_data <- data.frame()
-#   cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs( 500, 10, 0.2, 3, simulations = 10))
-#   cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs(1000, 10, 0.2, 3, simulations = 10))
-#   cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs(2500, 10, 0.2, 3, simulations = 10))
-#   write.csv(cum_data, file = "scenario3_atf_qs_02.csv")
-  # cum_data <- data.frame()
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs( 500, 10, 0.8, 3, simulations = 10))
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs(1000, 10, 0.8, 3, simulations = 10))
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations_atf_qs(2500, 10, 0.8, 3, simulations = 10))
-  # write.csv(cum_data, file = "scenario3_atf_qs_08.csv")
-#   
-# }
-
-
 {
   # Scenario 1
-  # cum_data <- data.frame()
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations_qatf_only( 500, 10, 0.5, 1, simulations = 10))
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations_qatf_only(1000, 10, 0.5, 1, simulations = 10))
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations_qatf_only(2500, 10, 0.5, 1, simulations = 10))
-  # write.csv(cum_data, file = "scenario1_qatf_05.csv")
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 1, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 1, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 1, simulations = 10))
+  write.csv(cum_data, file = "scenario1_05.csv")
   # Scenario 2
-  # cum_data <- data.frame()
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations_qatf_only( 500, 10, 0.5, 2, simulations = 10))
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations_qatf_only(1000, 10, 0.5, 2, simulations = 10))
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations_qatf_only(2500, 10, 0.5, 2, simulations = 10))
-  # write.csv(cum_data, file = "scenario2_qatf_05.csv")
-  # cum_data <- data.frame()
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations_qatf_only( 500, 10, 0.2, 2, simulations = 10))
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations_qatf_only(1000, 10, 0.2, 2, simulations = 10))
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations_qatf_only(2500, 10, 0.2, 2, simulations = 10))
-  # write.csv(cum_data, file = "scenario2_qatf_02.csv")
-  # cum_data <- data.frame()
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations_qatf_only( 500, 10, 0.8, 2, simulations = 10))
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations_qatf_only(1000, 10, 0.8, 2, simulations = 10))
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations_qatf_only(2500, 10, 0.8, 2, simulations = 10))
-  # write.csv(cum_data, file = "scenario2_qatf_08.csv")
-  # # Scenario 3
-  # cum_data <- data.frame()
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations_qatf_only( 500, 10, 0.5, 3, simulations = 10))
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations_qatf_only(1000, 10, 0.5, 3, simulations = 10))
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations_qatf_only(2500, 10, 0.5, 3, simulations = 10))
-  # write.csv(cum_data, file = "scenario3_qatf_05.csv")
-  # cum_data <- data.frame()
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations_qatf_only( 500, 10, 0.2, 3, simulations = 10))
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations_qatf_only(1000, 10, 0.2, 3, simulations = 10))
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations_qatf_only(2500, 10, 0.2, 3, simulations = 10))
-  # write.csv(cum_data, file = "scenario3_qatf_02.csv")
-  # cum_data <- data.frame()
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations_qatf_only( 500, 10, 0.8, 3, simulations = 10))
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations_qatf_only(1000, 10, 0.8, 3, simulations = 10))
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations_qatf_only(2500, 10, 0.8, 3, simulations = 10))
-  # write.csv(cum_data, file = "scenario3_qatf_08.csv")
-  
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 2, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 2, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 2, simulations = 10))
+  write.csv(cum_data, file = "scenario2_05.csv")
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.2, 2, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.2, 2, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.2, 2, simulations = 10))
+  write.csv(cum_data, file = "scenario2_02.csv")
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.8, 2, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.8, 2, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.8, 2, simulations = 10))
+  write.csv(cum_data, file = "scenario2_08.csv")
+  # Scenario 3
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 3, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 3, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 3, simulations = 10))
+  write.csv(cum_data, file = "scenario3_05.csv")
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.2, 3, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.2, 3, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.2, 3, simulations = 10))
+  write.csv(cum_data, file = "scenario3_02.csv")
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.8, 3, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.8, 3, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.8, 3, simulations = 10))
+  write.csv(cum_data, file = "scenario3_08.csv")
+  # Scenario 4
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 4, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 4, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 4, simulations = 10))
+  write.csv(cum_data, file = "scenario4_05.csv")
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.2, 4, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.2, 4, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.2, 4, simulations = 10))
+  write.csv(cum_data, file = "scenario4_02.csv")
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.8, 4, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.8, 4, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.8, 4, simulations = 10))
+  write.csv(cum_data, file = "scenario4_08.csv")
+}
+
+# Construct Only new scenario 3
+{
+  # Scenario 3
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 3, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 3, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 3, simulations = 10))
+  write.csv(cum_data, file = "scenario3_05.csv")
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.2, 3, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.2, 3, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.2, 3, simulations = 10))
+  write.csv(cum_data, file = "scenario3_02.csv")
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.8, 3, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.8, 3, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.8, 3, simulations = 10))
+  write.csv(cum_data, file = "scenario3_08.csv")
 }
 
 
