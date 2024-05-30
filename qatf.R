@@ -7,22 +7,6 @@
 # install.packages("fields")
 # install.packages("plotly")
 
-x <- seq(0, 10, length.out = 20000)
-mean(rlnorm(10000, 0, 1) - exp(1/2))
-
-plot(dlnorm(x, 0, 1)~x)
-par(mfrow = c(3, 3))
-plot(sin(2 * pi / (x + 0.1)^(1 / 10)))
-plot(sin(2 * pi / (x + 0.1)^(2 / 10)))
-plot(sin(2 * pi / (x + 0.1)^(3 / 10)))
-plot(sin(2 * pi / (x + 0.1)^(4 / 10)))
-plot(sin(2 * pi / (x + 0.1)^(5 / 10)))
-plot(sin(2 * pi / (x + 0.1)^(6 / 10)))
-plot(sin(2 * pi / (x + 0.1)^(7 / 10)))
-plot(sin(2 * pi / (x + 0.1)^(8 / 10)))
-plot(sin(2 * pi / (x + 0.1)^(9 / 10)))
-
-
 library(detrendr)
 # trace(get_model, edit=TRUE)
 library(glmgen)
@@ -154,8 +138,12 @@ get_mse_s <- function(x, y, y_star, n, d, tau, alpha = 10**-4, max_t = 50, print
   
   return(list("MSE" = best_mse, "LAMBDA" = best_lambda, "FIT" = best_s_trend_hat, "COMP" = best_components))
 }
-get_mse_q <- function(x, y, y_star, n, d, tau, k, alpha = 10**-4, max_t = 50, prints = TRUE){
+get_mse_q <- function(x, y, y_star, n, d, tau, k, alpha = 10**-4, max_t = 50, prints = TRUE, plots = FALSE){
   lambda_list <- 10**seq(7, -3, length.out=50)
+  if (plots) {
+    lambda_res <- numeric(50)
+    lambda_i <- 1
+    }
   
   best_mse <- Inf 
   best_lambda <- Inf
@@ -200,6 +188,10 @@ get_mse_q <- function(x, y, y_star, n, d, tau, k, alpha = 10**-4, max_t = 50, pr
     
     current_mse <- MSE(y_star, q_trend_hat) 
     if (prints) {cat("lambda of ", lambda, " achieved true MSE of ", current_mse, "\n")}
+    if (plots) {
+      lambda_res[lambda_i] <- current_mse
+      lambda_i <- lambda_i + 1
+    }
     
     if (current_mse < best_mse) {
       best_mse <- current_mse
@@ -207,6 +199,13 @@ get_mse_q <- function(x, y, y_star, n, d, tau, k, alpha = 10**-4, max_t = 50, pr
       best_q_trend_hat <- q_trend_hat
       best_components <- q_trend_list
     }
+  }
+  if(plots) {
+    par(mfrow = c(1, 1))
+    # Basic plot with log scale on x-axis
+    plot(lambda_list, lambda_res, log="x", 
+         xlab="Lambda (log scale)", ylab="MSE", main="Ablation Plot")
+    
   }
   return(list("MSE" = best_mse, "LAMBDA" = best_lambda, "FIT" = best_q_trend_hat, "COMP" = best_components))
 }
@@ -671,10 +670,7 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1) {
   for (i in 1:simulations) {
     if      (sce == 1) {vals <- scenario1(n, d, tau)}
     else if (sce == 2) {vals <- scenario2(n, d, tau)}
-    else if (sce == 3) {
-      print("scenario 3 splits mean and median")
-      vals <- scenario3med(n, d, tau)
-    }
+    else if (sce == 3) {vals <- scenario3(n, d, tau)}
     else if (sce == 4) {vals <- scenario4(n, d, tau)}
     else if (sce == 5) {vals <- scenario5(n, d, tau)}
     else if (sce == 6) {vals <- scenario6(n, d, tau)}
@@ -799,9 +795,9 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1) {
 
 # Construct Only new scenario 4
 {# Scenario 4
-cum_data <- data.frame()
-cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 4, simulations = 10))
-write.csv(cum_data, file = "scenario4_05_500.csv")
+# cum_data <- data.frame()
+# cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 4, simulations = 10))
+# write.csv(cum_data, file = "scenario4_05_500.csv")
 # cum_data <- data.frame()
 # cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 4, simulations = 10))
 # write.csv(cum_data, file = "scenario4_05_1000.csv")
@@ -853,7 +849,13 @@ write.csv(cum_data, file = "scenario4_05_500.csv")
 # Next Code is for plotting # 
 #############################
 
-### Edit, add get_mse function to pick lambda
+# Plot ablation scenario 1
+{
+  vals <- scenario1(1000, 10, 0.5)
+  get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, k=2, tau = 0.5, plots = TRUE)
+  
+}
+
 
 # Plot scenario 5
 {
