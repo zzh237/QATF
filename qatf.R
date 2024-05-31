@@ -640,9 +640,6 @@ scenario7 <- function(n, d=2, tau) {
   
   return(list(x_list, y, y_star_q, y_list))
 }
-vals <- scenario4(1000, 4, 0.5)
-vals <- scenario5(1000, 3, 0.5)
-vals <- scenario6(5000, 4, 0.5)
 
 
 
