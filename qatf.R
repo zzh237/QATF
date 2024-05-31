@@ -852,7 +852,7 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1) {
 # Plot ablation scenario 1
 {
   vals <- scenario1(1000, 10, 0.5)
-  get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, k=2, tau = 0.5, plots = TRUE)
+  out <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, k=2, tau = 0.5, plots = TRUE)
   
 }
 
