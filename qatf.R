@@ -510,7 +510,7 @@ scenario5 <- function(n, d=3, tau) {
           Please ensure inputs are each scalar values.")
   }
   if (d != 3) {
-    stop("Scenario 4 is specifically designed for d = 3")
+    stop("Scenario 5 is specifically designed for d = 3")
   }
   
   x_list <- matrix(NA, nrow = d, ncol = n)
@@ -541,7 +541,7 @@ scenario5 <- function(n, d=3, tau) {
   if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
   return(list(x_list, y, y_star_q, y_list))
 }
-scenario6 <- function(n, d=5, tau) {
+scenario6 <- function(n, d=4, tau) {
   # Scenario 7
   # i <- 1:n
   # g_1(x) <- −(t−1/2)**2
@@ -558,7 +558,7 @@ scenario6 <- function(n, d=5, tau) {
           Please ensure inputs are each scalar values.")
   }
   if (d != 4) {
-    stop("Scenario 4 is specifically designed for d = 4")
+    stop("Scenario 6 is specifically designed for d = 4")
   }
   
   x_list <- matrix(NA, nrow = d, ncol = n)
@@ -595,7 +595,7 @@ scenario7 <- function(n, d=2, tau) {
     stop("Scenario function is only suitable for a single scenario. Please ensure inputs are each scalar values.")
   }
   if (d != 2) {
-    stop("Scenario 6 is specifically designed for d = 2")
+    stop("Scenario 7 is specifically designed for d = 2")
   }
   
   x_list <- matrix(NA, nrow = d, ncol = n)
@@ -853,7 +853,24 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1) {
 {
   vals <- scenario1(1000, 10, 0.5)
   out <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, k=2, tau = 0.5, plots = TRUE)
-  
+}
+
+# Plot ablation scenario 2
+{
+  vals <- scenario2(1000, 10, 0.5)
+  out <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, k=2, tau = 0.5, plots = TRUE)
+}
+
+# Plot ablation scenario 3
+{
+  vals <- scenario3(1000, 10, 0.5)
+  out <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, k=2, tau = 0.5, plots = TRUE)
+}
+
+# Plot ablation scenario 4
+{
+  vals <- scenario4(1000, 10, 0.5)
+  out <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, k=2, tau = 0.5, plots = TRUE)
 }
 
 
@@ -947,7 +964,7 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1) {
 
 # Plot scenario 7
 {
-  vals <- scenario8(2500, 2, 0.5)
+  vals <- scenario7(2500, 2, 0.5)
   # vals[[4]] is y_list, vals[[1]] is x_list
   # out[[2]] is trend_list, out[[3]] is permutation matrix
   
