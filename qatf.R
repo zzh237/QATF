@@ -541,7 +541,7 @@ scenario5 <- function(n, d=3, tau) {
   if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
   return(list(x_list, y, y_star_q, y_list))
 }
-scenario6 <- function(n, d=5, tau) {
+scenario6 <- function(n, d=4, tau) {
   # Scenario 7
   # i <- 1:n
   # g_1(x) <- −(t−1/2)**2
@@ -595,7 +595,7 @@ scenario7 <- function(n, d=2, tau) {
     stop("Scenario function is only suitable for a single scenario. Please ensure inputs are each scalar values.")
   }
   if (d != 2) {
-    stop("Scenario 6 is specifically designed for d = 2")
+    stop("Scenario 7 is specifically designed for d = 2")
   }
   
   x_list <- matrix(NA, nrow = d, ncol = n)
@@ -852,16 +852,27 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1) {
 
 # Plot ablation scenario 1
 {
-  # vals <- scenario1(1000, 10, 0.5)
-  # get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, k=2, tau = 0.5, plots = TRUE)
-  # vals <- scenario2(1000, 10, 0.5)
-  # get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, k=2, tau = 0.5, plots = TRUE)
-  # vals <- scenario3(1000, 10, 0.5)
-  # get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, k=2, tau = 0.5, plots = TRUE)
-  # vals <- scenario4(1000, 10, 0.5)
-  # get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, k=2, tau = 0.5, plots = TRUE)
-
+  vals <- scenario1(1000, 10, 0.5)
+  out <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, k=2, tau = 0.5, plots = TRUE)
 }
+
+# # Plot ablation scenario 2
+# {
+#   vals <- scenario2(1000, 10, 0.5)
+#   out <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, k=2, tau = 0.5, plots = TRUE)
+# }
+# 
+# # Plot ablation scenario 3
+# {
+#   vals <- scenario3(1000, 10, 0.5)
+#   out <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, k=2, tau = 0.5, plots = TRUE)
+# }
+# 
+# # Plot ablation scenario 4
+# {
+#   vals <- scenario4(1000, 10, 0.5)
+#   out <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, k=2, tau = 0.5, plots = TRUE)
+# }
 
 
 
@@ -954,47 +965,48 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1) {
 #   }
 
 # Plot scenario 7
-# {
-#   vals <- scenario8(2500, 2, 0.5)
-#   # vals[[4]] is y_list, vals[[1]] is x_list
-#   # out[[2]] is trend_list, out[[3]] is permutation matrix
-# 
-#   lambda_qatf <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 2500, 2, 0.5, 2)
-#   outq <- fit_qatf(vals[[1]], vals[[2]], 2500, 2, 0.5, 2, lambda_qatf$LAMBDA)
-#   plot <- plot_ly(x = ~vals[[1]][1, ], y = ~vals[[1]][2, ], z = ~vals[[3]],
-#                   type = "scatter3d", mode = "markers",
-#                   marker = list(size = 3, color = ~vals[[3]], colorscale = 'Viridis')) %>%
-#     layout(scene = list(
-#       xaxis = list(title = "x1"),
-#       yaxis = list(title = "x2"),
-#       zaxis = list(title = "true y")
-#     ))
-# 
-#   print(plot)
-# 
-#   plot <- plot_ly(x = ~vals[[1]][1, ], y = ~vals[[1]][2, ], z = ~vals[[2]],
-#                   type = "scatter3d", mode = "markers",
-#                   marker = list(size = 3, color = ~vals[[2]], colorscale = 'Viridis')) %>%
-#     layout(scene = list(
-#       xaxis = list(title = "x1"),
-#       yaxis = list(title = "x2"),
-#       zaxis = list(title = "noisy data")
-#     ))
-# 
-#   print(plot)
-# 
-#   plot <- plot_ly(x = ~vals[[1]][1, ], y = ~vals[[1]][2, ], z = ~outq[[1]],
-#                   type = "scatter3d", mode = "markers",
-#                   marker = list(size = 3, color = ~outq[[1]], colorscale = 'Viridis')) %>%
-#     layout(scene = list(
-#       xaxis = list(title = "x1"),
-#       yaxis = list(title = "x2"),
-#       zaxis = list(title = "fit")
-#     ))
-# 
-#   print(plot)
-# 
-# }
+{
+  vals <- scenario7(2500, 2, 0.5)
+  # vals[[4]] is y_list, vals[[1]] is x_list
+  # out[[2]] is trend_list, out[[3]] is permutation matrix
+  
+  lambda_qatf <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 2500, 2, 0.5, 2)
+  outq <- fit_qatf(vals[[1]], vals[[2]], 2500, 2, 0.5, 2, lambda_qatf$LAMBDA)
+  plot <- plot_ly(x = ~vals[[1]][1, ], y = ~vals[[1]][2, ], z = ~vals[[3]], 
+                  type = "scatter3d", mode = "markers", 
+                  marker = list(size = 3, color = ~vals[[3]], colorscale = 'Viridis')) %>%
+    layout(scene = list(
+      xaxis = list(title = "x1"),
+      yaxis = list(title = "x2"),
+      zaxis = list(title = "true y")
+    ))
+  
+  print(plot)
+  
+  plot <- plot_ly(x = ~vals[[1]][1, ], y = ~vals[[1]][2, ], z = ~vals[[2]], 
+                  type = "scatter3d", mode = "markers", 
+                  marker = list(size = 3, color = ~vals[[2]], colorscale = 'Viridis')) %>%
+    layout(scene = list(
+      xaxis = list(title = "x1"),
+      yaxis = list(title = "x2"),
+      zaxis = list(title = "noisy data")
+    ))
+  
+  print(plot)
+  
+  plot <- plot_ly(x = ~vals[[1]][1, ], y = ~vals[[1]][2, ], z = ~outq[[1]], 
+                  type = "scatter3d", mode = "markers", 
+                  marker = list(size = 3, color = ~outq[[1]], colorscale = 'Viridis')) %>%
+    layout(scene = list(
+      xaxis = list(title = "x1"),
+      yaxis = list(title = "x2"),
+      zaxis = list(title = "fit")
+    ))
+  
+  print(plot)
+  
+}
+
 # Construct Table
 # {
 #   # Scenario 1
