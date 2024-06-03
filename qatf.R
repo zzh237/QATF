@@ -139,7 +139,7 @@ get_mse_s <- function(x, y, y_star, n, d, tau, alpha = 10**-4, max_t = 50, print
   return(list("MSE" = best_mse, "LAMBDA" = best_lambda, "FIT" = best_s_trend_hat, "COMP" = best_components))
 }
 get_mse_q <- function(x, y, y_star, n, d, tau, k, alpha = 10**-4, max_t = 50, prints = TRUE, plots = FALSE){
-  lambda_list <- 10**seq(7, -3, length.out=50)
+  lambda_list <- 10**seq(3, -3, length.out=50)
   if (plots) {
     lambda_res <- numeric(50)
     lambda_i <- 1
