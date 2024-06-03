@@ -965,47 +965,47 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1) {
 #   }
 
 # Plot scenario 7
-{
-  vals <- scenario7(2500, 2, 0.5)
-  # vals[[4]] is y_list, vals[[1]] is x_list
-  # out[[2]] is trend_list, out[[3]] is permutation matrix
-  
-  lambda_qatf <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 2500, 2, 0.5, 2)
-  outq <- fit_qatf(vals[[1]], vals[[2]], 2500, 2, 0.5, 2, lambda_qatf$LAMBDA)
-  plot <- plot_ly(x = ~vals[[1]][1, ], y = ~vals[[1]][2, ], z = ~vals[[3]], 
-                  type = "scatter3d", mode = "markers", 
-                  marker = list(size = 3, color = ~vals[[3]], colorscale = 'Viridis')) %>%
-    layout(scene = list(
-      xaxis = list(title = "x1"),
-      yaxis = list(title = "x2"),
-      zaxis = list(title = "true y")
-    ))
-  
-  print(plot)
-  
-  plot <- plot_ly(x = ~vals[[1]][1, ], y = ~vals[[1]][2, ], z = ~vals[[2]], 
-                  type = "scatter3d", mode = "markers", 
-                  marker = list(size = 3, color = ~vals[[2]], colorscale = 'Viridis')) %>%
-    layout(scene = list(
-      xaxis = list(title = "x1"),
-      yaxis = list(title = "x2"),
-      zaxis = list(title = "noisy data")
-    ))
-  
-  print(plot)
-  
-  plot <- plot_ly(x = ~vals[[1]][1, ], y = ~vals[[1]][2, ], z = ~outq[[1]], 
-                  type = "scatter3d", mode = "markers", 
-                  marker = list(size = 3, color = ~outq[[1]], colorscale = 'Viridis')) %>%
-    layout(scene = list(
-      xaxis = list(title = "x1"),
-      yaxis = list(title = "x2"),
-      zaxis = list(title = "fit")
-    ))
-  
-  print(plot)
-  
-}
+# {
+#   vals <- scenario7(2500, 2, 0.5)
+#   # vals[[4]] is y_list, vals[[1]] is x_list
+#   # out[[2]] is trend_list, out[[3]] is permutation matrix
+# 
+#   lambda_qatf <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 2500, 2, 0.5, 2)
+#   outq <- fit_qatf(vals[[1]], vals[[2]], 2500, 2, 0.5, 2, lambda_qatf$LAMBDA)
+#   plot <- plot_ly(x = ~vals[[1]][1, ], y = ~vals[[1]][2, ], z = ~vals[[3]],
+#                   type = "scatter3d", mode = "markers",
+#                   marker = list(size = 3, color = ~vals[[3]], colorscale = 'Viridis')) %>%
+#     layout(scene = list(
+#       xaxis = list(title = "x1"),
+#       yaxis = list(title = "x2"),
+#       zaxis = list(title = "true y")
+#     ))
+# 
+#   print(plot)
+# 
+#   plot <- plot_ly(x = ~vals[[1]][1, ], y = ~vals[[1]][2, ], z = ~vals[[2]],
+#                   type = "scatter3d", mode = "markers",
+#                   marker = list(size = 3, color = ~vals[[2]], colorscale = 'Viridis')) %>%
+#     layout(scene = list(
+#       xaxis = list(title = "x1"),
+#       yaxis = list(title = "x2"),
+#       zaxis = list(title = "noisy data")
+#     ))
+# 
+#   print(plot)
+# 
+#   plot <- plot_ly(x = ~vals[[1]][1, ], y = ~vals[[1]][2, ], z = ~outq[[1]],
+#                   type = "scatter3d", mode = "markers",
+#                   marker = list(size = 3, color = ~outq[[1]], colorscale = 'Viridis')) %>%
+#     layout(scene = list(
+#       xaxis = list(title = "x1"),
+#       yaxis = list(title = "x2"),
+#       zaxis = list(title = "fit")
+#     ))
+# 
+#   print(plot)
+# 
+# }
 
 # Construct Table
 # {
@@ -1190,48 +1190,48 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1) {
 # }
 # 
 # Plot scenario 6
-{
-  vals <- scenario6(1000, 4, 0.5)
-  # vals[[4]] is y_list, vals[[1]] is x_list
-  # out[[2]] is trend_list, out[[3]] is permutation matrix
-
-  lambda_qatf <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, 4, 0.5, 2)
-  outq <- fit_qatf(vals[[1]], vals[[2]], 1000, 4, 0.5, 2, lambda_qatf$LAMBDA)
-  plot <- plot_ly(x = ~vals[[1]][1, ], y = ~vals[[1]][2, ], z = ~vals[[3]],
-                  type = "scatter3d", mode = "markers",
-                  marker = list(size = 3, color = ~vals[[3]], colorscale = 'Viridis')) %>%
-    layout(scene = list(
-      xaxis = list(title = "x1"),
-      yaxis = list(title = "x2"),
-      zaxis = list(title = "true y")
-    ))
-
-  print(plot)
-
-  plot <- plot_ly(x = ~vals[[1]][1, ], y = ~vals[[1]][2, ], z = ~vals[[2]],
-                  type = "scatter3d", mode = "markers",
-                  marker = list(size = 3, color = ~vals[[2]], colorscale = 'Viridis')) %>%
-    layout(scene = list(
-      xaxis = list(title = "x1"),
-      yaxis = list(title = "x2"),
-      zaxis = list(title = "noisy data")
-    ))
-
-  print(plot)
-
-  plot <- plot_ly(x = ~vals[[1]][1, ], y = ~vals[[1]][2, ], z = ~outq[[1]],
-                  type = "scatter3d", mode = "markers",
-                  marker = list(size = 3, color = ~outq[[1]], colorscale = 'Viridis')) %>%
-    layout(scene = list(
-      xaxis = list(title = "x1"),
-      yaxis = list(title = "x2"),
-      zaxis = list(title = "fit")
-    ))
-
-  print(plot)
-
-
-}
+# {
+#   vals <- scenario6(1000, 4, 0.5)
+#   # vals[[4]] is y_list, vals[[1]] is x_list
+#   # out[[2]] is trend_list, out[[3]] is permutation matrix
+# 
+#   lambda_qatf <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, 4, 0.5, 2)
+#   outq <- fit_qatf(vals[[1]], vals[[2]], 1000, 4, 0.5, 2, lambda_qatf$LAMBDA)
+#   plot <- plot_ly(x = ~vals[[1]][1, ], y = ~vals[[1]][2, ], z = ~vals[[3]],
+#                   type = "scatter3d", mode = "markers",
+#                   marker = list(size = 3, color = ~vals[[3]], colorscale = 'Viridis')) %>%
+#     layout(scene = list(
+#       xaxis = list(title = "x1"),
+#       yaxis = list(title = "x2"),
+#       zaxis = list(title = "true y")
+#     ))
+# 
+#   print(plot)
+# 
+#   plot <- plot_ly(x = ~vals[[1]][1, ], y = ~vals[[1]][2, ], z = ~vals[[2]],
+#                   type = "scatter3d", mode = "markers",
+#                   marker = list(size = 3, color = ~vals[[2]], colorscale = 'Viridis')) %>%
+#     layout(scene = list(
+#       xaxis = list(title = "x1"),
+#       yaxis = list(title = "x2"),
+#       zaxis = list(title = "noisy data")
+#     ))
+# 
+#   print(plot)
+# 
+#   plot <- plot_ly(x = ~vals[[1]][1, ], y = ~vals[[1]][2, ], z = ~outq[[1]],
+#                   type = "scatter3d", mode = "markers",
+#                   marker = list(size = 3, color = ~outq[[1]], colorscale = 'Viridis')) %>%
+#     layout(scene = list(
+#       xaxis = list(title = "x1"),
+#       yaxis = list(title = "x2"),
+#       zaxis = list(title = "fit")
+#     ))
+# 
+#   print(plot)
+# 
+# 
+# }
 # 
 # 
 # # an example plot
