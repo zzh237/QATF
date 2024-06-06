@@ -28,7 +28,7 @@ MSE <- function(a, b){
 # Return an object with the best_mse, best_lambda, and best_fit
 # optional parameters  allow for better control
 get_mse <- function(x, y, y_star, n, d, k, alpha = 10**-4, max_t = 50, prints = TRUE, plots = FALSE){
-  lambda_list <- 10**seq(5, -7, length.out=50)
+  lambda_list <- 10**seq(3, -7, length.out=50)
   if (plots) {
     lambda_res <- numeric(50)
     lambda_i <- 1
@@ -90,7 +90,6 @@ get_mse <- function(x, y, y_star, n, d, k, alpha = 10**-4, max_t = 50, prints = 
     }
   }
   if(plots) {
-    par(mfrow = c(1, 1))
     # Basic plot with log scale on x-axis
     plot(lambda_list, lambda_res, log="x", 
          xlab="Lambda (log scale)", ylab="MSE", main="Ablation Plot ATF")
@@ -99,7 +98,7 @@ get_mse <- function(x, y, y_star, n, d, k, alpha = 10**-4, max_t = 50, prints = 
   return(list("MSE" = best_mse, "LAMBDA" = best_lambda, "FIT" = best_trend_hat, "COMP" = best_components))
 }
 get_mse_s <- function(x, y, y_star, n, d, tau, alpha = 10**-4, max_t = 50, prints = TRUE, plots = FALSE){
-  lambda_list <- 10**seq(1, -14, length.out=50)
+  lambda_list <- 10**seq(0, -16, length.out=50)
   if (plots) {
     lambda_res <- numeric(50)
     lambda_i <- 1
@@ -160,7 +159,6 @@ get_mse_s <- function(x, y, y_star, n, d, tau, alpha = 10**-4, max_t = 50, print
     }
   }
   if(plots) {
-    par(mfrow = c(1, 1))
     # Basic plot with log scale on x-axis
     plot(lambda_list, lambda_res, log="x", 
          xlab="Lambda (log scale)", ylab="MSE", main="Ablation Plot QSS")
@@ -169,7 +167,7 @@ get_mse_s <- function(x, y, y_star, n, d, tau, alpha = 10**-4, max_t = 50, print
   return(list("MSE" = best_mse, "LAMBDA" = best_lambda, "FIT" = best_s_trend_hat, "COMP" = best_components))
 }
 get_mse_q <- function(x, y, y_star, n, d, tau, k, alpha = 10**-4, max_t = 50, prints = TRUE, plots = FALSE){
-  lambda_list <- 10**seq(3, -2, length.out=50)
+  lambda_list <- 10**seq(4, -2, length.out=50)
   if (plots) {
     lambda_res <- numeric(50)
     lambda_i <- 1
@@ -231,7 +229,6 @@ get_mse_q <- function(x, y, y_star, n, d, tau, k, alpha = 10**-4, max_t = 50, pr
     }
   }
   if(plots) {
-    par(mfrow = c(1, 1))
     # Basic plot with log scale on x-axis
     plot(lambda_list, lambda_res, log="x", 
          xlab="Lambda (log scale)", ylab="MSE", main="Ablation Plot QATF")
@@ -883,40 +880,49 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1) {
 # Next Code is for plotting # 
 #############################
 
+
 # Plot ablation scenario 1
 {
   vals <- scenario1(1000, 10, 0.5)
-  par(mfrow = c(1, 3))
-  out <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, k=2, plots = TRUE)
-  outs <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, tau = 0.5, plots = TRUE)
+  par(mfrow = c(3, 2))
+  out <- get_mse(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, k=1, plots = TRUE)
+  out <- get_mse(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, k=2, plots = TRUE)
+  outq <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, k=1, tau = 0.5, plots = TRUE)
   outq <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, k=2, tau = 0.5, plots = TRUE)
+  outs <- get_mse_s(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, tau = 0.5, plots = TRUE)
 }
 
 # Plot ablation scenario 2
 {
   vals <- scenario2(1000, 10, 0.5)
-  par(mfrow = c(1, 3))
-  out <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, k=2, plots = TRUE)
-  outs <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, tau = 0.5, plots = TRUE)
+  par(mfrow = c(3, 2))
+  out <- get_mse(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, k=1, plots = TRUE)
+  out <- get_mse(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, k=2, plots = TRUE)
+  outq <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, k=1, tau = 0.5, plots = TRUE)
   outq <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, k=2, tau = 0.5, plots = TRUE)
+  outs <- get_mse_s(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, tau = 0.5, plots = TRUE)
 }
 
 # Plot ablation scenario 3
 {
   vals <- scenario3(1000, 10, 0.5)
-  par(mfrow = c(1, 3))
-  out <- get_mse_q(vals[[1]], vals[[4]], vals[[5]], 1000, d=10, k=2, plots = TRUE)
-  outs <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, tau = 0.5, plots = TRUE)
+  par(mfrow = c(3, 2))
+  out <- get_mse(vals[[1]], vals[[4]], vals[[5]], 1000, d=10, k=1, plots = TRUE)
+  out <- get_mse(vals[[1]], vals[[4]], vals[[5]], 1000, d=10, k=2, plots = TRUE)
+  outq <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, k=1, tau = 0.5, plots = TRUE)
   outq <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, k=2, tau = 0.5, plots = TRUE)
+  outs <- get_mse_s(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, tau = 0.5, plots = TRUE)
 }
 
 # Plot ablation scenario 4
 {
   vals <- scenario4(1000, 10, 0.5)
-  par(mfrow = c(1, 3))
-  out <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, k=2, plots = TRUE)
-  outs <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, tau = 0.5, plots = TRUE)
+  par(mfrow = c(3, 2))
+  out <- get_mse(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, k=1, plots = TRUE)
+  out <- get_mse(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, k=2, plots = TRUE)
+  outq <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, k=1, tau = 0.5, plots = TRUE)
   outq <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, k=2, tau = 0.5, plots = TRUE)
+  outs <- get_mse_s(vals[[1]], vals[[2]], vals[[3]], 1000, d=10, tau = 0.5, plots = TRUE)
 }
 
 
