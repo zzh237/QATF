@@ -366,9 +366,55 @@ fit_qatf <- function(x, y, n, d, tau, k, lambda, alpha = 10**-4, max_t = 50) {
 # construct plots withing
 # and return the true quantile fit, y_star_q, and the data, y
 # for tau = 0.5, y_star_q = y_star
+scenario0 <- function(n, d, tau) {
+  # Scenario 0
+  # g_0 is piecewise constant function alternating between 1 and -1, 
+  # at j + 2 breakpoints
+  # x drawn randomly from uniform distribution for each component
+  # f_0 <- a_j * piecewise_function - b_j with b_j such that mean(f_0) = 0 
+  # and a_j such that norm(f_0) = 1
+  
+  if (length(n) != 1 || length(d) != 1 || length(tau) != 1) {
+    stop("Scenario function is only suitable for a single scenario.\n
+          Please ensure inputs are each scalar values.")
+  }
+  
+  x_list <- matrix(NA, nrow = d, ncol = n)
+  y_list <- matrix(NA, nrow = d, ncol = n)
+  
+  piecewise_constant <- function(x, breakpoints, values) {
+    intervals <- findInterval(x, breakpoints)
+    return(values[intervals])
+  }
+  
+  for (j in 1:d) {
+    x_list[j, ] <- runif(n, 0, 1)
+    
+    # Define breakpoints for piecewise constant function
+    breakpoints <- seq(0, 1, length.out = j + 2)
+    values <- rep(c(1, -1), length.out = j + 1)  # alternating between 1 and -1
+    
+    # Piecewise constant function
+    g_0 <- piecewise_constant(x_list[j, ], breakpoints, values)
+    b_j <- mean(g_0)
+    a_j <- 1 / (norm(g_0 - b_j, type = "2") / sqrt(n))
+    y_list[j, ] <- a_j * g_0 - a_j * b_j
+  }
+  
+  # Sum of each column of y_list
+  y_star <- colSums(y_list)
+  
+  # T(3) errors
+  y <- y_star + rt(n, 3)
+  y_star_q <- y_star + qt(tau, 3)
+  
+  if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
+  return(list(x_list, y, y_star_q))
+}
+
+
 scenario1 <- function(n, d, tau) {
   # Scenario 1
-  # i <- 1:n
   # g_0(x) <- sin(2*pi/(x + 0.1)**(j/10))
   # x <- 1/n equally spaced
   # f_0 <- a_j*g_0 - b_j w/ b_j s.t. mean(f_0) = 0 and a_j s.t. norm(f_0) = 1
@@ -405,7 +451,6 @@ scenario1 <- function(n, d, tau) {
 }
 scenario2 <- function(n, d, tau) {
   # Scenario 2
-  # i <- 1:n
   # g_0(x) <- sin(2*pi/(x + 0.1)**(j/10))
   # x drawn randomly from uniform distribution for each component
   # f_0 <- a_j*g_0 - b_j w/ b_j s.t. mean(f_0) = 0 and a_j s.t. norm(f_0) = 1
@@ -443,7 +488,6 @@ scenario2 <- function(n, d, tau) {
 }
 scenario3 <- function(n, d, tau) {
   # Scenario 3
-  # i <- 1:n
   # g_0(x) <- sin(2*pi/(x + 0.1)**(j/10))
   # x drawn randomly from uniform distribution for each component
   # f_0 <- a_j*g_0 - b_j w/ b_j s.t. mean(f_0) = 0 and a_j s.t. norm(f_0) = 1
@@ -483,7 +527,6 @@ scenario3 <- function(n, d, tau) {
 }
 scenario4 <- function(n, d, tau) {
   # Scenario 3
-  # i <- 1:n
   # g_0(x) <- sin(2*pi/(x + 0.1)**(j/10))
   # x drawn randomly from uniform distribution for each component
   # f_0 <- a_j*g_0 - b_j w/ b_j s.t. mean(f_0) = 0 and a_j s.t. norm(f_0) = 1
@@ -520,7 +563,6 @@ scenario4 <- function(n, d, tau) {
   if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
   return(list(x_list, y, y_star_q))
 }
-
 scenario5 <- function(n, d=3, tau) {
   # Scenario 5
   # i <- 1:n
