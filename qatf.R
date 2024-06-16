@@ -366,9 +366,55 @@ fit_qatf <- function(x, y, n, d, tau, k, lambda, alpha = 10**-4, max_t = 50) {
 # construct plots withing
 # and return the true quantile fit, y_star_q, and the data, y
 # for tau = 0.5, y_star_q = y_star
+scenario0 <- function(n, d, tau) {
+  # Scenario 0
+  # g_0 is piecewise constant function alternating between 1 and -1, 
+  # at j + 2 breakpoints
+  # x drawn randomly from uniform distribution for each component
+  # f_0 <- a_j * piecewise_function - b_j with b_j such that mean(f_0) = 0 
+  # and a_j such that norm(f_0) = 1
+  
+  if (length(n) != 1 || length(d) != 1 || length(tau) != 1) {
+    stop("Scenario function is only suitable for a single scenario.\n
+          Please ensure inputs are each scalar values.")
+  }
+  
+  x_list <- matrix(NA, nrow = d, ncol = n)
+  y_list <- matrix(NA, nrow = d, ncol = n)
+  
+  piecewise_constant <- function(x, breakpoints, values) {
+    intervals <- findInterval(x, breakpoints)
+    return(values[intervals])
+  }
+  
+  for (j in 1:d) {
+    x_list[j, ] <- runif(n, 0, 1)
+    
+    # Define breakpoints for piecewise constant function
+    breakpoints <- seq(0, 1, length.out = j + 2)
+    values <- rep(c(1, -1), length.out = j + 1)  # alternating between 1 and -1
+    
+    # Piecewise constant function
+    g_0 <- piecewise_constant(x_list[j, ], breakpoints, values)
+    b_j <- mean(g_0)
+    a_j <- 1 / (norm(g_0 - b_j, type = "2") / sqrt(n))
+    y_list[j, ] <- a_j * g_0 - a_j * b_j
+  }
+  
+  # Sum of each column of y_list
+  y_star <- colSums(y_list)
+  
+  # T(3) errors
+  y <- y_star + rt(n, 3)
+  y_star_q <- y_star + qt(tau, 3)
+  
+  if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
+  return(list(x_list, y, y_star_q))
+}
+
+
 scenario1 <- function(n, d, tau) {
   # Scenario 1
-  # i <- 1:n
   # g_0(x) <- sin(2*pi/(x + 0.1)**(j/10))
   # x <- 1/n equally spaced
   # f_0 <- a_j*g_0 - b_j w/ b_j s.t. mean(f_0) = 0 and a_j s.t. norm(f_0) = 1
@@ -405,7 +451,6 @@ scenario1 <- function(n, d, tau) {
 }
 scenario2 <- function(n, d, tau) {
   # Scenario 2
-  # i <- 1:n
   # g_0(x) <- sin(2*pi/(x + 0.1)**(j/10))
   # x drawn randomly from uniform distribution for each component
   # f_0 <- a_j*g_0 - b_j w/ b_j s.t. mean(f_0) = 0 and a_j s.t. norm(f_0) = 1
@@ -443,7 +488,6 @@ scenario2 <- function(n, d, tau) {
 }
 scenario3 <- function(n, d, tau) {
   # Scenario 3
-  # i <- 1:n
   # g_0(x) <- sin(2*pi/(x + 0.1)**(j/10))
   # x drawn randomly from uniform distribution for each component
   # f_0 <- a_j*g_0 - b_j w/ b_j s.t. mean(f_0) = 0 and a_j s.t. norm(f_0) = 1
@@ -483,7 +527,6 @@ scenario3 <- function(n, d, tau) {
 }
 scenario4 <- function(n, d, tau) {
   # Scenario 3
-  # i <- 1:n
   # g_0(x) <- sin(2*pi/(x + 0.1)**(j/10))
   # x drawn randomly from uniform distribution for each component
   # f_0 <- a_j*g_0 - b_j w/ b_j s.t. mean(f_0) = 0 and a_j s.t. norm(f_0) = 1
@@ -520,7 +563,6 @@ scenario4 <- function(n, d, tau) {
   if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
   return(list(x_list, y, y_star_q))
 }
-
 scenario5 <- function(n, d=3, tau) {
   # Scenario 5
   # i <- 1:n
@@ -694,10 +736,10 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1) {
   # and append results to formatted data frame.
   
   ATF1_MSE <- 0
-  ATF2_MSE <- 0
+  ATF0_MSE <- 0
   QS_MSE <- 0
   QATF1_MSE <- 0
-  QATF2_MSE <- 0
+  QATF0_MSE <- 0
   for (i in 1:simulations) {
     if      (sce == 1) {vals <- scenario1(n, d, tau)}
     else if (sce == 2) {vals <- scenario2(n, d, tau)}
@@ -713,18 +755,18 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1) {
     if (tau == 0.5) {
       if (sce ==3) {
         ATF1 <- get_mse(vals[[1]], vals[[4]], vals[[5]], n, d, 1, prints = FALSE)
-        ATF2 <- get_mse(vals[[1]], vals[[4]], vals[[5]], n, d, 2, prints = FALSE)
+        ATF0 <- get_mse(vals[[1]], vals[[4]], vals[[5]], n, d, 0, prints = FALSE)
       } else {
         ATF1 <- get_mse(vals[[1]], vals[[2]], vals[[3]], n, d, 1, prints = FALSE)
-        ATF2 <- get_mse(vals[[1]], vals[[2]], vals[[3]], n, d, 2, prints = FALSE)
+        ATF0 <- get_mse(vals[[1]], vals[[2]], vals[[3]], n, d, 0, prints = FALSE)
       }
       ATF1_MSE <- ATF1_MSE + ATF1$MSE
-      ATF2_MSE <- ATF2_MSE + ATF2$MSE
+      ATF0_MSE <- ATF0_MSE + ATF0$MSE
       
       cat("mse for ATF1 was ", ATF1$MSE, "at lambda = ", ATF1$LAMBDA, "\n")
-      cat("mse for ATF2 was ", ATF2$MSE, "at lambda = ", ATF2$LAMBDA, "\n")
+      cat("mse for ATF0 was ", ATF0$MSE, "at lambda = ", ATF0$LAMBDA, "\n")
     } else {
-      cat("not running ATF1 or ATF2 since tau != 0.5\n")
+      cat("not running ATF1 or ATF0 since tau != 0.5\n")
     }
     
     QS <- get_mse_s(vals[[1]], vals[[2]], vals[[3]], n, d, tau, prints = FALSE)
@@ -732,25 +774,25 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1) {
     cat("mse for QS was ", QS$MSE, "at lambda = ", QS$LAMBDA, "\n")
     
     QATF1 <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], n, d, tau, 1, prints = FALSE)
-    QATF2 <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], n, d, tau, 2, prints = FALSE)
+    QATF0 <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], n, d, tau, 0, prints = FALSE)
     QATF1_MSE <- QATF1_MSE + QATF1$MSE
-    QATF2_MSE <- QATF2_MSE + QATF2$MSE
+    QATF0_MSE <- QATF0_MSE + QATF0$MSE
     
     cat("mse for QATF1 was ", QATF1$MSE, "at lambda = ", QATF1$LAMBDA, "\n")
-    cat("mse for QATF2 was ", QATF2$MSE, "at lambda = ", QATF2$LAMBDA, "\n")
+    cat("mse for QATF2 was ", QATF0$MSE, "at lambda = ", QATF0$LAMBDA, "\n")
     if (simulations != 1) {cat("finished simulation ", i, "\n")}
   }
   
   if (tau == 0.5) {
     ATF1_MSE <- ATF1_MSE / simulations
-    ATF2_MSE <- ATF2_MSE / simulations
+    ATF0_MSE <- ATF0_MSE / simulations
   } else {
     ATF1_MSE <- NA
-    ATF2_MSE <- NA
+    ATF0_MSE <- NA
   }
   QS_MSE <- QS_MSE / simulations
   QATF1_MSE <- QATF1_MSE / simulations
-  QATF2_MSE <- QATF2_MSE / simulations
+  QATF0_MSE <- QATF0_MSE / simulations
   
   return(data.frame(n = n,
                     Scenario = sce,
