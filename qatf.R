@@ -411,8 +411,6 @@ scenario0 <- function(n, d, tau) {
   if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
   return(list(x_list, y, y_star_q))
 }
-
-
 scenario1 <- function(n, d, tau) {
   # Scenario 1
   # g_0(x) <- sin(2*pi/(x + 0.1)**(j/10))
@@ -526,7 +524,7 @@ scenario3 <- function(n, d, tau) {
   return(list(x_list, y, y_star_q))
 }
 scenario4 <- function(n, d, tau) {
-  # Scenario 3
+  # Scenario 4
   # g_0(x) <- sin(2*pi/(x + 0.1)**(j/10))
   # x drawn randomly from uniform distribution for each component
   # f_0 <- a_j*g_0 - b_j w/ b_j s.t. mean(f_0) = 0 and a_j s.t. norm(f_0) = 1
@@ -712,6 +710,9 @@ scenario7 <- function(n, d=2, tau) {
 
 
 # Test scenarios for data frame
+scenario0(500, 10, 0.5)
+scenario0(500, 10, 0.2)
+scenario0(500, 10, 0.8)
 scenario1(500, 10, 0.5)
 scenario2(500, 10, 0.5)
 scenario2(500, 10, 0.2)
@@ -806,6 +807,12 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1) {
 
 # Construct Table
 {
+  # Scenario 0
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 0, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 0, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 0, simulations = 10))
+  write.csv(cum_data, file = "scenario0_05.csv")
   # Scenario 1
   cum_data <- data.frame()
   cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 1, simulations = 10))
@@ -849,6 +856,7 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1) {
 #############################
 
 
+# I believe per last discussion we will not be doing this. 
 # Plot ablation scenario 1
 {
   vals <- scenario1(1000, 10, 0.5)
