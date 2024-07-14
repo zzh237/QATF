@@ -264,3 +264,21 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1) {
 }
 
 
+
+############################################
+# Next code is to generate component plots #
+############################################
+
+scenario0(500, 10, 0.5, TRUE)
+scenario1(500, 10, 0.5, TRUE)
+scenario2(500, 10, 0.5, TRUE)
+scenario3(500, 10, 0.5, TRUE)
+scenario4(500, 10, 0.5, TRUE)
+
+scenario5(500, 3, 0.5, TRUE)
+scenario6(500, 4, 0.5, TRUE)
+scenario7(500, 2, 0.5, TRUE)
+
+# Run this in R terminal to remove all generated plots
+# system("rm sce[0-9]_plot*")
+

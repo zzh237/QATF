@@ -408,17 +408,3 @@ scenario7 <- function(n, d=2, tau, plots = FALSE) {
   return(list(x_list, y, y_star_q, y_list))
 }
 
-
-
-# Plot test scenarios for data frame
-scenario0(500, 10, 0.5, TRUE)
-scenario1(500, 10, 0.5, TRUE)
-scenario2(500, 10, 0.5, TRUE)
-scenario3(500, 10, 0.5, TRUE)
-scenario4(500, 10, 0.5, TRUE)
-
-scenario5(500, 3, 0.5, TRUE)
-scenario6(500, 4, 0.5, TRUE)
-scenario7(500, 2, 0.5, TRUE)
-
-# system("rm sce[0-9]_plot*")
