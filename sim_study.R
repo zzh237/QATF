@@ -11,7 +11,7 @@ source("algorithms.R")
 # The output is designed for building the data frame
 run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1) {
   # This function only exists for us to make constructing the data frame quicker
-  # Wrapper function is set to run with fixed k = 1 and 2, 
+  # Wrapper function is set to run with fixed k = 0 and 1, 
   # and append results to formatted data frame.
   
   ATF1_MSE <- 0

@@ -33,7 +33,7 @@ scenario0 <- function(n, d, tau, plots = FALSE) {
     x_list[j, ] <- runif(n, 0, 1)
     
     # Define breakpoints for piecewise constant function
-    breakpoints <- seq(0, 1, length.out = j + 2)
+    breakpoints <- seq(0, 1, length.out = j + 2)^2
     values <- rep(c(1, -1), length.out = j + 1)  # alternating between 1 and -1
     
     # Piecewise constant function
