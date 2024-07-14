@@ -1,4 +1,4 @@
 Let us keep the current version of the QATF project here. 
 
-Current version on overleaf: 
-Link: 
+Current version on overleaf: jmlr2024.txt
+Link: https://www.overleaf.com/project/6494efd212c443686a79f133

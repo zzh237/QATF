@@ -164,7 +164,7 @@ get_mse_s <- function(x, y, y_star, n, d, tau, alpha = 10**-4, max_t = 50, print
   return(list("MSE" = best_mse, "LAMBDA" = best_lambda, "FIT" = best_s_trend_hat, "COMP" = best_components))
 }
 get_mse_q <- function(x, y, y_star, n, d, tau, k, alpha = 10**-4, max_t = 50, prints = TRUE, plots = FALSE){
-  lambda_list <- 10**seq(3 + k, -3 + k, length.out=50)
+  lambda_list <- 10**seq(4 + k, -3 + k, length.out=50)
   if (plots) {
     lambda_res <- numeric(50)
     lambda_i <- 1
@@ -235,7 +235,7 @@ get_mse_q <- function(x, y, y_star, n, d, tau, k, alpha = 10**-4, max_t = 50, pr
 }
 
 # get_mse uses 50 lambdas in 10^5 to 10^-9
-# get_mse uses 50 lambdas in 10^1 to 10^-14
+# get_mse_s uses 50 lambdas in 10^1 to 10^-14
 # get_mse uses 50 lambdas in 10^5 to 10^-9
 
 # These functions employ the algorithm for a single lambda, 
@@ -358,6 +358,9 @@ fit_qatf <- function(x, y, n, d, tau, k, lambda, alpha = 10**-4, max_t = 50) {
 # TODO:
 # Add fit function / combine fit function to do CV 
 # So we can do feature selection for real data 
+# get_fit_cv
+
+
 
 
 

@@ -282,3 +282,4 @@ scenario7(500, 2, 0.5, TRUE)
 # Run this in R terminal to remove all generated plots
 # system("rm sce[0-9]_plot*")
 
+
