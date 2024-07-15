@@ -362,6 +362,106 @@ fit_qatf <- function(x, y, n, d, tau, k, lambda, alpha = 10**-4, max_t = 50) {
 
 
 
+fit_cv_q <- function(x, y, n, d, tau, k, alpha = 10**-4, nfolds = 5, max_t = 50, prints = TRUE){
+  # Predicted fit is linear interpolation via approx 
+  # approx(x, y, loc, method = linear)$y
+  
+  folds <- sample(cut(1:length(x), breaks = nfolds, labels = FALSE))
+  
+  x_sep <- vector("list", nfolds)
+  y_sep <- vector("list", nfolds)
+  ord_sep <- vector("list", nfolds)
+
+  for (fold in 1:nfolds) {
+    train_idx <- which(folds != fold)
+    x_sep[[fold]] <- x[train_idx, ]
+    y_sep[[fold]] <- y[train_idx, ]
+    
+    # TODO, continue cv studd
+    # by making ord a list of matrices
+    ord <- matrix(NA, nrow = nrow(x[train_idx, ]), ncol = ncol(y[train_idx, ]))
+    for (j in 1:nrow(x)) { 
+      ord[j, ] <- order(x[j, ])
+      x[j, ] <- x[j, ][ord[j, ]]
+    }
+    
+  }
+  
+  ord <- matrix(NA, nrow = nrow(x), ncol = ncol(x))
+  # Calculate order for each row of x, and sort each row of x
+  # Doing ahead of time saves cost
+  for (j in 1:nrow(x)) { 
+    ord[j, ] <- order(x[j, ])
+    x[j, ] <- x[j, ][ord[j, ]]
+  }
+  
+  
+  
+  lambda_list <- 10**seq(4 + k, -3 + k, length.out=50)
+  if (plots) {
+    lambda_res <- numeric(50)
+    lambda_i <- 1
+  }
+  
+  best_mse <- Inf 
+  best_lambda <- Inf
+  best_q_trend_hat <- rep(0, times = n)
+  
+
+  
+  for (lambda in lambda_list) {
+    q_trend_list <- as.data.frame(matrix(0, nrow = n, ncol = d)) 
+    # we initialize all component functions to be 0
+    
+    q_trend_hat_prev <- rep(0, times = n)
+    t <- 1
+    repeat {
+      for (j in 1:d){
+        # calculate jth partial residual using components not equal to j
+        if (d == 2) {resp <- y - as.numeric(q_trend_list[, -j])}
+        else {resp <- y - as.numeric(t(rowSums(q_trend_list[, -j])))}
+        
+        # for some reason, get_trend's k is one above expected (e.g. 2 is linear fit)
+        # fit on ordered response
+        fit <- get_trend(resp[ord[j, ]], tau, lambda, k+1)
+        # get_trend requires equally spaced points
+        
+        # unorder fit
+        q_trend_list[, j] <- fit[order(ord[j, ])]
+      }
+      q_trend_hat <- rowSums(q_trend_list)
+      
+      if (all((abs(q_trend_hat - q_trend_hat_prev) <= alpha))) {break}
+      else if (t >= max_t) {break}
+      
+      q_trend_hat_prev <- q_trend_hat
+      t <- t + 1
+    }
+    
+    current_mse <- MSE(y_star, q_trend_hat) 
+    if (prints) {cat("lambda of ", lambda, " achieved true MSE of ", current_mse, "\n")}
+    if (plots) {
+      lambda_res[lambda_i] <- current_mse
+      lambda_i <- lambda_i + 1
+    }
+    
+    if (current_mse < best_mse) {
+      best_mse <- current_mse
+      best_lambda <- lambda
+      best_q_trend_hat <- q_trend_hat
+      best_components <- q_trend_list
+    }
+  }
+  if(plots) {
+    # Basic plot with log scale on x-axis
+    plot(lambda_list, lambda_res, log="x", 
+         xlab="Lambda (log scale)", ylab="MSE", main="Ablation Plot QATF")
+    
+  }
+  return(list("MSE" = best_mse, "LAMBDA" = best_lambda, "FIT" = best_q_trend_hat, "COMP" = best_components))
+}
+
+
 
 
 

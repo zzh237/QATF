@@ -9,3 +9,7 @@ source(algorithms.R)
 # Find and use real data
 # Construct plots using this data 
 
+
+housing <- read_csv("housing.csv")
+bikeday <- read_csv("bike_data/day.csv")
+bikehour <- read_csv("bike_data/hour.csv")
