@@ -11,7 +11,7 @@ source("algorithms.R")
 # The output is designed for building the data frame
 
 # method can be "min_lambda" (default) or "optimal" 
-run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1, nlambdas = 50, method = "min_lambda") {
+run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1, nlambdas = 50, method = "min_lambda", save = FALSE) {
   if (!(method == "min_lambda" || method == "optimal")) {
     stop("method can be \"min_lambda\" (default) or \"optimal\"")
   }
@@ -43,6 +43,8 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1, nlambdas
     else if (sce == 6) {vals <- scenario6(n, d, tau)}
     else if (sce == 7) {vals <- scenario6(n, d, tau)}
     else {stop("Only 0-7 scenarios at the time of this functions' construction")}
+    
+    if (save) { saveRDS(vals, file = paste0("sce_", sce, "_simulation_", i, ".txt"))}
     
     ### Additive Trend Filtering ###
     # Only run get_mse for tau = 0.5 and not scenario 3
