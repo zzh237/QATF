@@ -13,3 +13,7 @@ source(algorithms.R)
 housing <- read_csv("housing.csv")
 bikeday <- read_csv("bike_data/day.csv")
 bikehour <- read_csv("bike_data/hour.csv")
+
+
+
+

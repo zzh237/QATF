@@ -1,16 +1,8 @@
 # QATF algorithms.R
 
-# install.packages("devtools")
-# library(devtools)
-# install_github("zzh237/detrendr")
-# install_github("glmgen/genlasso")
-# not sure if this next one is necessary - Zhi can you check? 
-# install_github("statsmaths/glmgen", subdir="R_pkg/glmgen")
-# install.packages("fields")
-# install.packages("plotly")
-
 library(detrendr)
 # trace(get_model, edit=TRUE)
+# needs gurobi license: https://portal.gurobi.com/iam/licenses/list/
 library(glmgen)
 library(fields)
 library(tidyverse)
@@ -22,20 +14,13 @@ MSE <- function(a, b){
 }
 
 # These functions require all inputs to be passed in
-# Return an object with the best_mse, best_lambda, and best_fit
+# Return a range of MSEs and range of Lambdas
 # optional parameters  allow for better control
 get_mse <- function(x, y, y_star, n, d, k, alpha = 10**-4, max_t = 50, prints = TRUE, plots = FALSE){
   lambda_list <- 10**seq(3, -7, length.out=50)
-  if (plots) {
-    lambda_res <- numeric(50)
-    lambda_i <- 1
-  }
+  lambda_res <- numeric(50)
   
   y_mean <- mean(y)
-  
-  best_mse <- Inf 
-  best_lambda <- Inf
-  best_trend_hat <- rep(0, times = n)
   
   ord <- matrix(NA, nrow = nrow(x), ncol = ncol(x))
   # Calculate order for each row of x, and sort each row of x
@@ -45,6 +30,7 @@ get_mse <- function(x, y, y_star, n, d, k, alpha = 10**-4, max_t = 50, prints = 
     x[j, ] <- x[j, ][ord[j, ]]
   }
   
+  lambda_i <- 1
   for (lambda in lambda_list) {
     zero_matrix <- as.data.frame(matrix(0, nrow = n, ncol = d)) 
     trend_list <- as.data.frame(zero_matrix) 
@@ -72,19 +58,10 @@ get_mse <- function(x, y, y_star, n, d, k, alpha = 10**-4, max_t = 50, prints = 
       t <- t + 1
     }
     
-    current_mse <- MSE(y_star, trend_hat + y_mean) 
-    if (prints) {cat("lambda of ", lambda, " achieved true MSE of ", current_mse, "\n")}
-    if (plots) {
-      lambda_res[lambda_i] <- current_mse
-      lambda_i <- lambda_i + 1
-    }
+    lambda_res[lambda_i] <- MSE(y_star, trend_hat + y_mean) 
     
-    if (current_mse < best_mse) {
-      best_mse <- current_mse
-      best_lambda <- lambda
-      best_trend_hat <- trend_hat
-      best_components <- trend_list
-    }
+    if (prints) {cat("lambda of ", lambda, " achieved true MSE of ", lambda_res[lambda_i], "\n")}
+    lambda_i <- lambda_i + 1
   }
   if(plots) {
     # Basic plot with log scale on x-axis
@@ -92,19 +69,12 @@ get_mse <- function(x, y, y_star, n, d, k, alpha = 10**-4, max_t = 50, prints = 
          xlab="Lambda (log scale)", ylab="MSE", main="Ablation Plot ATF")
     
   }
-  return(list("MSE" = best_mse, "LAMBDA" = best_lambda, "FIT" = best_trend_hat, "COMP" = best_components))
+  return(list("MSES" = lambda_res, "LAMBDAS" = lambda_list))
 }
 get_mse_s <- function(x, y, y_star, n, d, tau, alpha = 10**-4, max_t = 50, prints = TRUE, plots = FALSE){
   lambda_list <- 10**seq(0, -16, length.out=50)
-  if (plots) {
-    lambda_res <- numeric(50)
-    lambda_i <- 1
-  }
+  lambda_res <- numeric(50)
   # cubic splines of this form seem to prefer very small lambda values
-  
-  best_mse <- Inf 
-  best_lambda <- Inf
-  best_s_trend_hat <- rep(0, times = n)
   
   ord <- matrix(NA, nrow = nrow(x), ncol = ncol(x))
   # Calculate order for each row of x, and sort each row of x
@@ -114,7 +84,7 @@ get_mse_s <- function(x, y, y_star, n, d, tau, alpha = 10**-4, max_t = 50, print
     x[j, ] <- x[j, ][ord[j, ]]
   }
   
-  
+  lambda_i <- 1
   for (lambda in lambda_list) {
     s_trend_list <- as.data.frame(matrix(0, nrow = n, ncol = d)) 
     # we initialize all component functions to be 0
@@ -141,19 +111,10 @@ get_mse_s <- function(x, y, y_star, n, d, tau, alpha = 10**-4, max_t = 50, print
       t <- t + 1
     }
     
-    current_mse <- MSE(y_star, s_trend_hat) 
-    if (prints) {cat("lambda of ", lambda, " achieved true MSE of ", current_mse, "\n")}
-    if (plots) {
-      lambda_res[lambda_i] <- current_mse
-      lambda_i <- lambda_i + 1
-    }
+    lambda_res[lambda_i] <- MSE(y_star, s_trend_hat) 
+    if (prints) {cat("lambda of ", lambda, " achieved true MSE of ", lambda_res[lambda_i], "\n")}
     
-    if (current_mse < best_mse) {
-      best_mse <- current_mse
-      best_lambda <- lambda
-      best_s_trend_hat <- s_trend_hat
-      best_components <- s_trend_list
-    }
+    lambda_i <- lambda_i + 1
   }
   if(plots) {
     # Basic plot with log scale on x-axis
@@ -161,18 +122,11 @@ get_mse_s <- function(x, y, y_star, n, d, tau, alpha = 10**-4, max_t = 50, print
          xlab="Lambda (log scale)", ylab="MSE", main="Ablation Plot QSS")
     
   }
-  return(list("MSE" = best_mse, "LAMBDA" = best_lambda, "FIT" = best_s_trend_hat, "COMP" = best_components))
+  return(list("MSES" = lambda_res, "LAMBDAS" = lambda_list))
 }
 get_mse_q <- function(x, y, y_star, n, d, tau, k, alpha = 10**-4, max_t = 50, prints = TRUE, plots = FALSE){
   lambda_list <- 10**seq(4 + k, -3 + k, length.out=50)
-  if (plots) {
-    lambda_res <- numeric(50)
-    lambda_i <- 1
-  }
-  
-  best_mse <- Inf 
-  best_lambda <- Inf
-  best_q_trend_hat <- rep(0, times = n)
+  lambda_res <- numeric(50)
   
   ord <- matrix(NA, nrow = nrow(x), ncol = ncol(x))
   # Calculate order for each row of x, and sort each row of x
@@ -182,6 +136,7 @@ get_mse_q <- function(x, y, y_star, n, d, tau, k, alpha = 10**-4, max_t = 50, pr
     x[j, ] <- x[j, ][ord[j, ]]
   }
   
+  lambda_i <- 1
   for (lambda in lambda_list) {
     q_trend_list <- as.data.frame(matrix(0, nrow = n, ncol = d)) 
     # we initialize all component functions to be 0
@@ -211,32 +166,22 @@ get_mse_q <- function(x, y, y_star, n, d, tau, k, alpha = 10**-4, max_t = 50, pr
       t <- t + 1
     }
     
-    current_mse <- MSE(y_star, q_trend_hat) 
-    if (prints) {cat("lambda of ", lambda, " achieved true MSE of ", current_mse, "\n")}
-    if (plots) {
-      lambda_res[lambda_i] <- current_mse
-      lambda_i <- lambda_i + 1
-    }
-    
-    if (current_mse < best_mse) {
-      best_mse <- current_mse
-      best_lambda <- lambda
-      best_q_trend_hat <- q_trend_hat
-      best_components <- q_trend_list
-    }
+    lambda_res[lambda_i] <- MSE(y_star, q_trend_hat) 
+    if (prints) {cat("lambda of ", lambda, " achieved true MSE of ", lambda_res[lambda_i], "\n")}
+    lambda_i <- lambda_i + 1
+
   }
   if(plots) {
     # Basic plot with log scale on x-axis
     plot(lambda_list, lambda_res, log="x", 
          xlab="Lambda (log scale)", ylab="MSE", main="Ablation Plot QATF")
-    
   }
-  return(list("MSE" = best_mse, "LAMBDA" = best_lambda, "FIT" = best_q_trend_hat, "COMP" = best_components))
+  return(list("MSES" = lambda_res, "LAMBDAS" = lambda_list))
 }
 
-# get_mse uses 50 lambdas in 10^5 to 10^-9
-# get_mse_s uses 50 lambdas in 10^1 to 10^-14
-# get_mse uses 50 lambdas in 10^5 to 10^-9
+# get_mse uses 50 lambdas in 10^3 to 10^-7
+# get_mse_s uses 50 lambdas in 10^0 to 10^-16
+# get_mse uses 50 lambdas in 10^(4+k) to 10^(-3+k)
 
 # These functions employ the algorithm for a single lambda, 
 # and output the fit, coefficients for each component, permutation matrix of inputs.
