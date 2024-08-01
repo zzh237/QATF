@@ -11,7 +11,8 @@ source("algorithms.R")
 # The output is designed for building the data frame
 
 # method can be "min_lambda" (default) or "optimal" 
-run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1, nlambdas = 50, method = "min_lambda", save = FALSE) {
+run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1, nlambdas = 50, 
+                                       method = "min_lambda", save = FALSE) {
   if (!(method == "min_lambda" || method == "optimal")) {
     stop("method can be \"min_lambda\" (default) or \"optimal\"")
   }
@@ -265,6 +266,7 @@ run_custom_sce_simulations(500, 10, 0.5, 1, simulations = 2, method = "optimal")
 # Plot scenario 6, QATF only
 {
   vals <- scenario6(1000, 4, 0.5)
+  source("algorithms.R")
   # vals[[4]] is y_list, vals[[1]] is x_list
   # out[[2]] is trend_list, out[[3]] is permutation matrix
   
@@ -272,6 +274,7 @@ run_custom_sce_simulations(500, 10, 0.5, 1, simulations = 2, method = "optimal")
   
   lambda_qres <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, 4, 0.5, 2)
   lambdaq <- lambda_qres$LAMBDAS[which.min(lambda_qres$MSES)]
+  print(lambdaq)
   outq <- fit_qatf(vals[[1]], vals[[2]], 1000, 4, 0.5, 2, lambdaq)
   # Set the layout to have 4 plots in a 1x4 grid
   par(mfrow = c(1, 4), mar = c(2, 2, 2, 2), oma = c(0, 0, 0, 0))
