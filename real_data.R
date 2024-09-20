@@ -5,14 +5,15 @@ library(tidyverse)
 library(foreach)
 library(doParallel)
 
+
 Combined_dat <- read.csv("happiness/Combined_dat.csv")
-par(mfrow = c(3, 3), mar = c(2, 2, 2, 2), oma = c(0, 0, 0, 0))
-for (i in 1:9) {
-  # Generate the plot with the title set to the column name
-  plot(sort(Combined_dat[, 1 + i]), 
-       main = colnames(Combined_dat)[1 + i], 
-       xlab = "", ylab = "", lwd = 1)
-}
+# par(mfrow = c(3, 3), mar = c(2, 2, 2, 2), oma = c(0, 0, 0, 0))
+# for (i in 1:9) {
+#   # Generate the plot with the title set to the column name
+#   plot(sort(Combined_dat[, 1 + i]), 
+#        main = colnames(Combined_dat)[1 + i], 
+#        xlab = "", ylab = "", lwd = 1)
+# }
 
 min_vals <- Combined_dat %>%
   select(2:10) %>%
@@ -43,52 +44,52 @@ results <- foreach(i = 1:10) %dopar% {
   test_indices <- which(splits == i)
   test_data <- Scaled_Centered[test_indices, ]
   train_data <- Scaled_Centered[-test_indices, ]
-  
   n = nrow(train_data)
-
+  
   # Model fitting
   res5 <- qatf_cv(t(train_data[, 2:10]), train_data[, 11], n, 9, 0.5, 0, prints = FALSE)
   lambda5 <- res5$LAMBDAS[which.min(res5$MEANS)]
   fit5 <- fit_qatf(t(train_data[, 2:10]), train_data[, 11], n, 9, 0.5, 0, lambda5)
   test_set_mean <- MSE(predict_fit(train_data[, 2:10], fit5$fit, test_data[, 2:10]), test_data[, 11])
-
+  
   # Coverage calculations
   res95 <- qatf_cv(t(train_data[, 2:10]), train_data[, 11], n, 9, 0.95, 0, prints = FALSE)
   lambda95 <- res95$LAMBDAS[which.min(res95$MEANS)]
   fit95 <- fit_qatf(t(train_data[, 2:10]), train_data[, 11], n, 9, 0.95, 0, lambda95)
   pred95 <- predict_fit(train_data[, 2:10], fit95$fit, test_data[, 2:10])
-
+  
   res9 <- qatf_cv(t(train_data[, 2:10]), train_data[, 11], n, 9, 0.9, 0, prints = FALSE)
   lambda9 <- res9$LAMBDAS[which.min(res9$MEANS)]
   fit9 <- fit_qatf(t(train_data[, 2:10]), train_data[, 11], n, 9, 0.9, 0, lambda9)
   pred9 <- predict_fit(train_data[, 2:10], fit9$fit, test_data[, 2:10])
-
+  
   res8 <- qatf_cv(t(train_data[, 2:10]), train_data[, 11], n, 9, 0.8, 0, prints = FALSE)
   lambda8 <- res8$LAMBDAS[which.min(res8$MEANS)]
   fit8 <- fit_qatf(t(train_data[, 2:10]), train_data[, 11], n, 9, 0.8, 0, lambda8)
   pred8 <- predict_fit(train_data[, 2:10], fit8$fit, test_data[, 2:10])
-
+  
   res2 <- qatf_cv(t(train_data[, 2:10]), train_data[, 11], n, 9, 0.2, 0, prints = FALSE)
   lambda2 <- res2$LAMBDAS[which.min(res2$MEANS)]
   fit2 <- fit_qatf(t(train_data[, 2:10]), train_data[, 11], n, 9, 0.2, 0, lambda2)
   pred2 <- predict_fit(train_data[, 2:10], fit2$fit, test_data[, 2:10])
-
+  
   res1 <- qatf_cv(t(train_data[, 2:10]), train_data[, 11], n, 9, 0.1, 0, prints = FALSE)
   lambda1 <- res1$LAMBDAS[which.min(res1$MEANS)]
   fit1 <- fit_qatf(t(train_data[, 2:10]), train_data[, 11], n, 9, 0.1, 0, lambda1)
   pred1 <- predict_fit(train_data[, 2:10], fit1$fit, test_data[, 2:10])
-
+  
   res05 <- qatf_cv(t(train_data[, 2:10]), train_data[, 11], n, 9, 0.05, 0, prints = FALSE)
   lambda05 <- res05$LAMBDAS[which.min(res05$MEANS)]
   fit05 <- fit_qatf(t(train_data[, 2:10]), train_data[, 11], n, 9, 0.05, 0, lambda05)
   pred05 <- predict_fit(train_data[, 2:10], fit05$fit, test_data[, 2:10])
-
+  
   test_set_coverage9 <- mean(test_data[, 11] <= pred95 & test_data[, 11] >= pred05)
   test_set_coverage8 <- mean(test_data[, 11] <= pred9 & test_data[, 11] >= pred1)
   test_set_coverage6 <- mean(test_data[, 11] <= pred8 & test_data[, 11] >= pred2)
   
   list(
     test_set_mean = test_set_mean,
+    lambda5 = lambda5,
     test_set_coverage9 = test_set_coverage9,
     test_set_coverage8 = test_set_coverage8,
     test_set_coverage6 = test_set_coverage6
@@ -104,30 +105,65 @@ mean_coverage9 <- mean(sapply(results, function(x) x$test_set_coverage9))
 mean_coverage8 <- mean(sapply(results, function(x) x$test_set_coverage8))
 mean_coverage6 <- mean(sapply(results, function(x) x$test_set_coverage6))
 
-# Print results
+# Convert the results into a data frame
+average_metrics <- data.frame(
+  Metric = c("Mean MSE", "Mean Coverage 0.9", "Mean Coverage 0.8", "Mean Coverage 0.6"),
+  Value = c(mean_mse, mean_coverage9, mean_coverage8, mean_coverage6)
+)
+write.csv(average_metrics, "average_metrics.csv", row.names = FALSE)
+
+write.csv(data.frame(Split = splits), file = "splits.csv", row.names = FALSE)
+lambda5_df <- data.frame(Lambda5 = sapply(results, function(x) x$lambda5))
+write.csv(lambda5_df, file = "lambda5.csv", row.names = FALSE)
+
 cat("Average MSE: ", mean_mse, "\n",
     "Average Coverage (95% CI): ", mean_coverage9, "\n",
     "Average Coverage (90% CI): ", mean_coverage8, "\n",
     "Average Coverage (80% CI): ", mean_coverage6, "\n")
 
-# Plots
-n = nrow(Scaled_Centered)
-lambda_qres <- qatf_cv(t(Scaled_Centered[, 2:10]), Scaled_Centered[, 11], n, 9, 0.5, 0)
-lambda <- lambda_qres$LAMBDAS[which.min(lambda_qres$MEANS)]
-outq <- fit_qatf(t(Scaled_Centered[, 2:10]), Scaled_Centered[, 11], n, 9, 0.5, 0, lambda)
 
-for (i in 1:9) {
-  # Generate the plot
-  plot(outq[[2]][, i][outq[[3]][i, ]] + mean(Combined_dat[, 11]), 
-       xaxt = 'n', yaxt = 'n', main = paste("Plot", i), xlab = "", ylab = "", lwd = 1,
-       ylim = c(0, 10))
+
+
+
+# Construct ensemble plot
+source("algorithms.R")
+
+png(filename = "ensemble_plot.png", width = 1000, height = 1000)
+par(mfrow = c(3, 3))
+first_plot <- TRUE
+
+for (i in 1:10) {
   
-  # # If I need labels
-  # # Calculate the original x-axis labels for this plot
-  # x_original <- seq(0, 1, length.out = 5) * (max_vals[i - 1] - min_vals[i - 1]) + min_vals[i - 1]
-  # # Add custom x-axis labels with the original values
-  # axis(1, at = seq(0, 1, length.out = 5), labels = round(x_original, 2))
+  test_indices <- which(splits == i)
+  test_data <- Scaled_Centered[test_indices, ]
+  train_data <- Scaled_Centered[-test_indices, ]
+  n = nrow(train_data)
+  
+  outq <- fit_qatf(t(train_data[, 2:10]), train_data[, 11], n, 9, 0.5, 0, results[[i]]$lambda5)
+  for (j in 1:9) {
+    if (first_plot) {
+      # Plot as a line (type = "l")
+      plot(outq[[2]][, j][outq[[3]][j, ]] + mean(Combined_dat[, 11]),
+           xaxt = 'n', yaxt = 'n', main = colnames(Combined_dat)[j + 1],
+           xlab = "", ylab = "", lwd = 1, type = "l")
+      
+      x_range <- seq(1, length(outq[[2]][, j][outq[[3]][j, ]]), length.out = 5) # Adjust for x data length
+      x_original <- seq(0, 1, length.out = 5) * (max_vals[j] - min_vals[j]) + min_vals[j]
+      
+      # Add custom x-axis labels with the original values
+      axis(1, at = x_range, labels = round(x_original, 2))
+      
+      # Add y-axis numbers for the original scale
+      axis(2)
+    } else {
+      lines(outq[[2]][, j][outq[[3]][j, ]] + mean(Combined_dat[, 11]), lwd = 1)
+    }
+  }
+  first_plot <- FALSE
 }
+
+# Close the PNG device and save the plot
+dev.off()
 
 
 
@@ -159,3 +195,22 @@ for (i in 1:9) {
 # % internet users (WDI)
 
 
+
+# # Plots
+# n = nrow(Scaled_Centered)
+# lambda_qres <- qatf_cv(t(Scaled_Centered[, 2:10]), Scaled_Centered[, 11], n, 9, 0.5, 0)
+# lambda <- lambda_qres$LAMBDAS[which.min(lambda_qres$MEANS)]
+# outq <- fit_qatf(t(Scaled_Centered[, 2:10]), Scaled_Centered[, 11], n, 9, 0.5, 0, lambda)
+# 
+# for (i in 1:9) {
+#   # Generate the plot
+#   plot(outq[[2]][, i][outq[[3]][i, ]] + mean(Combined_dat[, 11]), 
+#        xaxt = 'n', yaxt = 'n', main = paste("Plot", i), xlab = "", ylab = "", lwd = 1,
+#        ylim = c(0, 10))
+#   
+#   # # If I need labels
+#   # # Calculate the original x-axis labels for this plot
+#   # x_original <- seq(0, 1, length.out = 5) * (max_vals[i] - min_vals[i]) + min_vals[i]
+#   # # Add custom x-axis labels with the original values
+#   # axis(1, at = seq(0, 1, length.out = 5), labels = round(x_original, 2))
+# }
