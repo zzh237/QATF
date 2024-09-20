@@ -3,17 +3,9 @@
 
 source("algorithms.R")
 library(tidyverse)
+library(foreach)
+library(doParallel)
 
-# TODO:
-# Set up conformal inference and prediction interval functions
-# Find and use real data
-# Construct plots using this data 
-
-# https://arxiv.org/abs/2012.01758
-# Bike data, and other datasets, from https://arxiv.org/abs/1909.05433
-# Probablistic Load Forecasting https://arxiv.org/abs/1707.03307
-
-# Happiness data inspired by: https://arxiv.org/pdf/1409.5391
 
 Combined_dat <- read.csv("happiness/Combined_dat.csv")
 par(mfrow = c(3, 3), mar = c(2, 2, 2, 2), oma = c(0, 0, 0, 0))
@@ -38,14 +30,16 @@ Scaled_Centered <- Combined_dat %>%
   mutate(across(2:10, ~ (. - min_vals[cur_column()]) / (max_vals[cur_column()] - min_vals[cur_column()]))) %>%
   mutate(Ladder.score = Ladder.score - mean(Ladder.score, na.rm = TRUE))
 
-# For avg test set 0.5 MSE and 0.1, 0.9 Coverage
-splits <- sample(rep(1:10, length.out = nrow(Scaled_Centered)))
-test_set_means <- numeric(10)
-test_set_coverages9 <- numeric(10)
-test_set_coverages8 <- numeric(10)
-test_set_coverages6 <- numeric(10)
 
-for (i in 1:10) {
+# Set up parallel backend
+num_cores <- detectCores() - 1  # Use all cores except one
+cl <- makeCluster(num_cores)
+registerDoParallel(cl)
+
+splits <- sample(rep(1:10, length.out = nrow(Scaled_Centered)))
+
+# Parallel loop using foreach
+results <- foreach(i = 1:10, .packages = c("qatf")) %dopar% {
   
   test_indices <- which(splits == i)
   test_data <- Scaled_Centered[test_indices, ]
@@ -53,11 +47,13 @@ for (i in 1:10) {
   
   n = nrow(train_data)
   
+  # Model fitting
   res5 <- qatf_cv(t(train_data[, 2:10]), train_data[, 11], n, 9, 0.5, 0, prints = FALSE)
   lambda5 <- res5$LAMBDAS[which.min(res5$MEANS)]
   fit5 <- fit_qatf(t(train_data[, 2:10]), train_data[, 11], n, 9, 0.5, 0, lambda5)
-  test_set_means[i] <- MSE(predict_fit(train_data[, 2:10], fit5$fit, test_data[, 2:10]), test_data[, 11])
+  test_set_mean <- MSE(predict_fit(train_data[, 2:10], fit5$fit, test_data[, 2:10]), test_data[, 11])
   
+  # Coverage calculations
   res95 <- qatf_cv(t(train_data[, 2:10]), train_data[, 11], n, 9, 0.95, 0, prints = FALSE)
   lambda95 <- res95$LAMBDAS[which.min(res95$MEANS)]
   fit95 <- fit_qatf(t(train_data[, 2:10]), train_data[, 11], n, 9, 0.95, 0, lambda95)
@@ -88,27 +84,32 @@ for (i in 1:10) {
   fit05 <- fit_qatf(t(train_data[, 2:10]), train_data[, 11], n, 9, 0.05, 0, lambda05)
   pred05 <- predict_fit(train_data[, 2:10], fit05$fit, test_data[, 2:10])
   
-  test_set_coverages9[i] <- mean(test_data[, 11] <= pred95 & test_data[, 11] >= pred05)
-  test_set_coverages8[i] <- mean(test_data[, 11] <= pred9 & test_data[, 11] >= pred1)
-  test_set_coverages6[i] <- mean(test_data[, 11] <= pred8 & test_data[, 11] >= pred2)
+  test_set_coverage9 <- mean(test_data[, 11] <= pred95 & test_data[, 11] >= pred05)
+  test_set_coverage8 <- mean(test_data[, 11] <= pred9 & test_data[, 11] >= pred1)
+  test_set_coverage6 <- mean(test_data[, 11] <= pred8 & test_data[, 11] >= pred2)
   
-  cat("\n\nIteration ", i, " finished\n\n",
-      "lambda_med = ", lambda_med, "\n",
-      "lambda_low = ", lambda_low, "\n",
-      "lambda_up = ", lambda_up, "\n", 
-      "test_set_means[", i, "] = ", test_set_means[i], "\n",
-      "test_set_coverages[", i, "] = ", test_set_coverages[i], "\n\n\n", sep = "")
+  list(
+    test_set_mean = test_set_mean,
+    test_set_coverage9 = test_set_coverage9,
+    test_set_coverage8 = test_set_coverage8,
+    test_set_coverage6 = test_set_coverage6
+  )
 }
 
+# Stop cluster
+stopCluster(cl)
 
-mean(test_set_means)
-mean(test_set_coverages9)
-mean(test_set_coverages8)
-mean(test_set_coverages6)
+# Collect and calculate the average MSE and coverage metrics
+mean_mse <- mean(sapply(results, function(x) x$test_set_mean))
+mean_coverage9 <- mean(sapply(results, function(x) x$test_set_coverage9))
+mean_coverage8 <- mean(sapply(results, function(x) x$test_set_coverage8))
+mean_coverage6 <- mean(sapply(results, function(x) x$test_set_coverage6))
 
-# qatf_cv <- (x, y, n, d, tau, k, alpha = 10**-4, nfolds = 5, max_t = 50, prints = FALSE)
-# predict_fit <- function(data, fit, loc, method = "1-NN")
-# fit_qatf <- (x, y, n, d, tau, k, lambda, alpha = 10**-4, max_t = 50)
+# Print results
+cat("Average MSE: ", mean_mse, "\n",
+    "Average Coverage (95% CI): ", mean_coverage9, "\n",
+    "Average Coverage (90% CI): ", mean_coverage8, "\n",
+    "Average Coverage (80% CI): ", mean_coverage6, "\n")
 
 
 # Plots
@@ -160,12 +161,3 @@ for (i in 1:9) {
 # % internet users (WDI)
 
 
-
-
-
-
-
-
-# BIC to find lambda and then fit median to verify it is close to the mean
-# Prediction interval with train test (.1 and .9 tau, coverage should be 80%)
-# To evaluate coverage, evaluate closest x in training and see if it has the y 
