@@ -15,6 +15,8 @@ MSE <- function(a, b){
   return(norm(a - b, type="2")**2/len) 
 }
 
+check <- function(u, tau) {u*(tau - 1*ifelse(u < 0, 1, 0))}
+
 # These functions require all inputs to be passed in
 # Return a range of MSEs and range of Lambdas
 # optional parameters  allow for better control
@@ -303,7 +305,7 @@ fit_qatf <- function(x, y, n, d, tau, k, lambda, alpha = 10**-4, max_t = 50) {
 }
 
 
-predict_fit <- function(data, fit, loc, method = "5-NN") {
+predict_fit <- function(data, fit, loc, method = "1-NN") {
   if (grepl("-NN$", method)) {
     k <- as.numeric(sub("(\\d+)-NN$", "\\1", method))
     return(knn.reg(train = data, test = loc, y = fit, k = k)$pred)
@@ -316,10 +318,10 @@ predict_fit <- function(data, fit, loc, method = "5-NN") {
   else if (method == "GPR") {stop("Not Implemented")}
   else {stop("Not Implemented")}
 }
-get_cv_mse_q <- function(x, y, n, d, tau, k, alpha = 10**-4, nfolds = 5, max_t = 50, prints = TRUE, plots = FALSE){
-  # Evaluates QATF for a range of lambdas via CV
-  # Predictions are constructed via 5-NN (Switch to GBM or SVM?)
-  # Future may choose to pass this in as an argument 
+qatf_cv <- function(x, y, n, d, tau, k, alpha = 10**-4, nfolds = 5, max_t = 50, prints = FALSE){
+  # Evaluates QATF for a range of lambdas via CV with the Check Function
+  # Predictions are constructed via 1-NN
+  # May choose to pass this in as an argument 
   folds <- sample(rep(1:nfolds, length.out = n))
   
   x_sep <- vector("list", nfolds)
@@ -346,7 +348,7 @@ get_cv_mse_q <- function(x, y, n, d, tau, k, alpha = 10**-4, nfolds = 5, max_t =
   
   lambda_i <- 1
   for (lambda in lambda_list) {
-    cv_mses <- numeric(nfolds)
+    cv_mean <- numeric(nfolds)
     
     for (fold in 1:nfolds) {
       fold_n <- ncol(x_sep[[fold]])
@@ -378,24 +380,19 @@ get_cv_mse_q <- function(x, y, n, d, tau, k, alpha = 10**-4, nfolds = 5, max_t =
       }
       
       test_idx <- which(folds == fold)
-      cv_mses[fold] <- MSE(predict_fit(t(x_sep[[fold]]), q_trend_hat, t(x[, test_idx]), method = "SVM"), y[test_idx])
-      if (prints) {cat("\tPrediction MSE of fold ", fold, " is ", cv_mses[fold], " \n", sep = "")}
+      cv_mean[fold] <- mean(check(y[test_idx] - predict_fit(t(x_sep[[fold]]), q_trend_hat, t(x[, test_idx]), method = "1-NN"), tau))
+      if (prints) {cat("\tPrediction mean check of fold ", fold, " is ", cv_mean[fold], " \n", sep = "")}
     }
     
-    lambda_res[lambda_i] <- mean(cv_mses) 
-    if (prints) {cat("lambda of ", lambda, " achieved ", nfolds, "-fold CV MSE of ", lambda_res[lambda_i], " \n", sep = "")}
+    lambda_res[lambda_i] <- mean(cv_mean) 
+    if (prints) {cat("lambda of ", lambda, " achieved ", nfolds, "-fold CV mean check of ",
+                     lambda_res[lambda_i], " \n", sep = "")}
     lambda_i <- lambda_i + 1
     
   }
-  
-  
-  if(plots) {
-    # Basic plot with log scale on x-axis
-    plot(lambda_list, lambda_res, log="x", 
-         xlab="Lambda (log scale)", ylab="CV-MSE", main="Ablation Plot QATF")
-  }
-  return(list("MSES" = lambda_res, "LAMBDAS" = lambda_list))
+  return(list("MEANS" = lambda_res, "LAMBDAS" = lambda_list))
   
 } 
   
-  
+
+
