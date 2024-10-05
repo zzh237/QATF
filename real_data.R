@@ -37,7 +37,8 @@ registerDoParallel(cl)
 splits <- sample(rep(1:10, length.out = nrow(Scaled_Centered)))
 
 # Parallel loop using foreach
-results <- foreach(i = 1:10) %dopar% {
+# results <- foreach(i = 1:10) %dopar% {
+for (i in 1:10) {
   source("algorithms.R")
   
   test_indices <- which(splits == i)
@@ -46,8 +47,8 @@ results <- foreach(i = 1:10) %dopar% {
   n = nrow(train_data)
   
   # Model fitting
-  res5 <- qatf_cv(t(train_data[, 2:10]), train_data[, 11], n, 9, 0.5, 0, prints = FALSE)
-  lambda5 <- res5$LAMBDAS[which.min(res5$MEANS)]
+  res5 <- qatf_cv(t(train_data[, 2:10]), train_data[, 11], n, 9, 0.5, 0, prints = TRUE)
+  lambda5 <- res5$LAMBDAS[which.min(rev(res5$MEANS))]
   fit5 <- fit_qatf(t(train_data[, 2:10]), train_data[, 11], n, 9, 0.5, 0, lambda5)
   test_set_mean <- MSE(predict_fit(train_data[, 2:10], fit5$fit, test_data[, 2:10]), test_data[, 11])
   
@@ -98,14 +99,19 @@ results <- foreach(i = 1:10) %dopar% {
     test_set_mean = test_set_mean,
     lambda5 = lambda5
   )
+
+  cat("Average MSE: ", mean_mse, "\n", 
+      "Lambda: ", lambda5, "\n")
+  
 }
 
 # Stop cluster
-stopCluster(cl)
+# stopCluster(cl)
 
 # Collect and calculate the average MSE and coverage metrics
 mean_mse <- mean(sapply(results, function(x) x$test_set_mean))
 print(mean_mse)
+sapply(results, function(x) x$lambda5)
 # mean_coverage9 <- mean(sapply(results, function(x) x$test_set_coverage9))
 # mean_coverage8 <- mean(sapply(results, function(x) x$test_set_coverage8))
 # mean_coverage6 <- mean(sapply(results, function(x) x$test_set_coverage6))

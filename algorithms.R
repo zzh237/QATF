@@ -342,7 +342,7 @@ qatf_cv <- function(x, y, n, d, tau, k, alpha = 10**-4, nfolds = 5, max_t = 50, 
   }
   
   
-  lambda_list <- 10**seq(4 + k, -3 + k, length.out=50)
+  lambda_list <- 10**seq(3 + k, -2 + k, length.out=50)
   lambda_res <- numeric(50)
   
   

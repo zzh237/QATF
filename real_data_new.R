@@ -47,18 +47,18 @@ results <- foreach(i = 1:10) %dopar% {
   
   # Model fitting
   res5 <- qatf_cv(t(train_data[, 2:10]), train_data[, 11], n, 9, 0.5, 0, prints = FALSE)
-  lambda5 <- res5$LAMBDAS[which.min(res5$MEANS)]
+  lambda5 <- res5$LAMBDAS[which.min(rev(res5$MEANS))]
   fit5 <- fit_qatf(t(train_data[, 2:10]), train_data[, 11], n, 9, 0.5, 0, lambda5)
   test_set_mean <- MSE(predict_fit(train_data[, 2:10], fit5$fit, test_data[, 2:10]), test_data[, 11])
 
 
   res9 <- qatf_cv(t(train_data[, 2:10]), train_data[, 11], n, 9, 0.9, 0, prints = FALSE)
-  lambda9 <- res9$LAMBDAS[which.min(res9$MEANS)]
+  lambda9 <- res9$LAMBDAS[which.min(rev(res9$MEANS))]
   fit9 <- fit_qatf(t(train_data[, 2:10]), train_data[, 11], n, 9, 0.9, 0, lambda9)
   pred9 <- predict_fit(train_data[, 2:10], fit9$fit, test_data[, 2:10])
 
   res1 <- qatf_cv(t(train_data[, 2:10]), train_data[, 11], n, 9, 0.1, 0, prints = FALSE)
-  lambda1 <- res1$LAMBDAS[which.min(res1$MEANS)]
+  lambda1 <- res1$LAMBDAS[which.min(rev(res1$MEANS))]
   fit1 <- fit_qatf(t(train_data[, 2:10]), train_data[, 11], n, 9, 0.1, 0, lambda1)
   pred1 <- predict_fit(train_data[, 2:10], fit1$fit, test_data[, 2:10])
   test_set_coverage8 <- mean(test_data[, 11] <= pred9 & test_data[, 11] >= pred1)
