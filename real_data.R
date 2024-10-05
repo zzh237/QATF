@@ -37,8 +37,8 @@ registerDoParallel(cl)
 splits <- sample(rep(1:10, length.out = nrow(Scaled_Centered)))
 
 # Parallel loop using foreach
-# results <- foreach(i = 1:10) %dopar% {
-for (i in 1:10) {
+results <- foreach(i = 1:10) %dopar% {
+# for (i in 1:10) {
   source("algorithms.R")
   
   test_indices <- which(splits == i)
@@ -47,7 +47,7 @@ for (i in 1:10) {
   n = nrow(train_data)
   
   # Model fitting
-  res5 <- qatf_cv(t(train_data[, 2:10]), train_data[, 11], n, 9, 0.5, 0, prints = TRUE)
+  res5 <- qatf_cv(t(train_data[, 2:10]), train_data[, 11], n, 9, 0.5, 0, prints = FALSE)
   lambda5 <- res5$LAMBDAS[which.min(rev(res5$MEANS))]
   fit5 <- fit_qatf(t(train_data[, 2:10]), train_data[, 11], n, 9, 0.5, 0, lambda5)
   test_set_mean <- MSE(predict_fit(train_data[, 2:10], fit5$fit, test_data[, 2:10]), test_data[, 11])
@@ -100,13 +100,13 @@ for (i in 1:10) {
     lambda5 = lambda5
   )
 
-  cat("Average MSE: ", mean_mse, "\n", 
-      "Lambda: ", lambda5, "\n")
+  # cat("Average MSE: ", mean_mse, "\n", 
+  #     "Lambda: ", lambda5, "\n")
   
 }
 
 # Stop cluster
-# stopCluster(cl)
+stopCluster(cl)
 
 # Collect and calculate the average MSE and coverage metrics
 mean_mse <- mean(sapply(results, function(x) x$test_set_mean))
@@ -131,51 +131,6 @@ sapply(results, function(x) x$lambda5)
 #     "Average Coverage (95% CI): ", mean_coverage9, "\n",
 #     "Average Coverage (90% CI): ", mean_coverage8, "\n",
 #     "Average Coverage (80% CI): ", mean_coverage6, "\n")
-
-
-
-
-
-# Construct ensemble plot
-source("algorithms.R")
-
-png(filename = "ensemble_plot.png", width = 1000, height = 1000)
-par(mfrow = c(3, 3))
-first_plot <- TRUE
-
-for (i in 1:10) {
-  
-  test_indices <- which(splits == i)
-  test_data <- Scaled_Centered[test_indices, ]
-  train_data <- Scaled_Centered[-test_indices, ]
-  n = nrow(train_data)
-  
-  outq <- fit_qatf(t(train_data[, 2:10]), train_data[, 11], n, 9, 0.5, 0, results[[i]]$lambda5)
-  for (j in 1:9) {
-    if (first_plot) {
-      # Plot as a line (type = "l")
-      plot(outq[[2]][, j][outq[[3]][j, ]] + mean(Combined_dat[, 11]),
-           xaxt = 'n', yaxt = 'n', main = colnames(Combined_dat)[j + 1],
-           xlab = "", ylab = "", lwd = 1, type = "l")
-      
-      x_range <- seq(1, length(outq[[2]][, j][outq[[3]][j, ]]), length.out = 5) # Adjust for x data length
-      x_original <- seq(0, 1, length.out = 5) * (max_vals[j] - min_vals[j]) + min_vals[j]
-      
-      # Add custom x-axis labels with the original values
-      axis(1, at = x_range, labels = round(x_original, 2))
-      
-      # Add y-axis numbers for the original scale
-      axis(2)
-    } else {
-      lines(outq[[2]][, j][outq[[3]][j, ]] + mean(Combined_dat[, 11]), lwd = 1)
-    }
-  }
-  first_plot <- FALSE
-}
-
-# Close the PNG device and save the plot
-dev.off()
-
 
 
 
