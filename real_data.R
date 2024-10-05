@@ -29,7 +29,6 @@ Scaled_Centered <- Combined_dat %>%
   mutate(across(2:10, ~ (. - min_vals[cur_column()]) / (max_vals[cur_column()] - min_vals[cur_column()]))) %>%
   mutate(Ladder.score = Ladder.score - mean(Ladder.score, na.rm = TRUE))
 
-
 # Set up parallel backend
 num_cores <- detectCores() - 1  # Use all cores except one
 cl <- makeCluster(num_cores)
