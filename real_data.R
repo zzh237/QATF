@@ -100,7 +100,7 @@ results <- foreach(i = 1:10) %dopar% {
   pred1_sorted  <- pred_sorted[, 6]
   pred05_sorted <- pred_sorted[, 7]
   
-  test_set_mean_sorted <- MSE(pred5, test_data[, 11])
+  test_set_mean_sorted <- MSE(pred5_sorted, test_data[, 11])
   test_set_coverage9_sorted <- mean(test_data[, 11] <= pred95_sorted & test_data[, 11] >= pred05_sorted)
   test_set_coverage8_sorted <- mean(test_data[, 11] <= pred9_sorted & test_data[, 11] >= pred1_sorted)
   test_set_coverage6_sorted <- mean(test_data[, 11] <= pred8_sorted & test_data[, 11] >= pred2_sorted)
@@ -109,8 +109,8 @@ results <- foreach(i = 1:10) %dopar% {
 
   list(
     lambda5 = lambda5,
-    lambda5 = lambda1,
-    lambda5 = lambda9,
+    lambda1 = lambda1,
+    lambda9 = lambda9,
     test_set_mean = test_set_mean,
     test_set_coverage9 = test_set_coverage9,
     test_set_coverage8 = test_set_coverage8,
@@ -121,8 +121,8 @@ results <- foreach(i = 1:10) %dopar% {
     test_set_coverage6_sorted = test_set_coverage6_sorted
   )
 
-  cat("Average MSE: ", mean_mse, "\n",
-      "Lambda: ", lambda5, "\n")
+  # cat("Average MSE: ", test_set_mean, "\n",
+  #     "Lambda: ", lambda5, "\n")
   
 }
 
