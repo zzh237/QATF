@@ -160,23 +160,3 @@ sapply(results, function(x) x$lambda5)
 # Log Scientific journal articles published (WDI)
 # % internet users (WDI)
 
-
-
-# # Plots
-# n = nrow(Scaled_Centered)
-# lambda_qres <- qatf_cv(t(Scaled_Centered[, 2:10]), Scaled_Centered[, 11], n, 9, 0.5, 0)
-# lambda <- lambda_qres$LAMBDAS[which.min(lambda_qres$MEANS)]
-# outq <- fit_qatf(t(Scaled_Centered[, 2:10]), Scaled_Centered[, 11], n, 9, 0.5, 0, lambda)
-# 
-# for (i in 1:9) {
-#   # Generate the plot
-#   plot(outq[[2]][, i][outq[[3]][i, ]] + mean(Combined_dat[, 11]), 
-#        xaxt = 'n', yaxt = 'n', main = paste("Plot", i), xlab = "", ylab = "", lwd = 1,
-#        ylim = c(0, 10))
-#   
-#   # # If I need labels
-#   # # Calculate the original x-axis labels for this plot
-#   # x_original <- seq(0, 1, length.out = 5) * (max_vals[i] - min_vals[i]) + min_vals[i]
-#   # # Add custom x-axis labels with the original values
-#   # axis(1, at = seq(0, 1, length.out = 5), labels = round(x_original, 2))
-# }

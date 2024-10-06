@@ -288,30 +288,23 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1, nlambdas
   
   par(mfrow = c(1, 4))
   
+  # Get the optimal lambda
   lambda_qres <- get_mse_q(vals[[1]], vals[[2]], vals[[3]], 1000, 4, 0.5, 2)
   lambdaq <- lambda_qres$LAMBDAS[which.min(lambda_qres$MSES)]
   print(lambdaq)
   outq <- fit_qatf(vals[[1]], vals[[2]], 1000, 4, 0.5, 2, lambdaq)
-  # Set the layout to have 4 plots in a 1x4 grid
-  par(mfrow = c(1, 4), mar = c(2, 2, 2, 2), oma = c(0, 0, 0, 0))
   
-  # Plot 1
-  plot(vals[[4]][1, ][outq[[3]][1, ]], xaxt = 'n', yaxt = 'n', main = "", xlab = "", ylab = "")
-  lines(outq[[2]][, 1][outq[[3]][1, ]], col = "blue", lwd = 2)
+  # Set up the plot layout (4 plots in 1 row)
+  par(mfrow = c(1, 4), mar = c(5, 4, 4, 2) + 0.1) # Reset the margins for better spacing
   
-  # Plot 2
-  plot(vals[[4]][2, ][outq[[3]][2, ]], xaxt = 'n', yaxt = 'n', main = "", xlab = "", ylab = "")
-  lines(outq[[2]][, 2][outq[[3]][2, ]], col = "blue", lwd = 2)
-  
-  # Plot 3
-  plot(vals[[4]][3, ][outq[[3]][3, ]], xaxt = 'n', yaxt = 'n', main = "", xlab = "", ylab = "")
-  lines(outq[[2]][, 3][outq[[3]][3, ]], col = "blue", lwd = 2)
-  
-  # Plot 4
-  plot(vals[[4]][4, ][outq[[3]][4, ]], xaxt = 'n', yaxt = 'n', main = "", xlab = "", ylab = "")
-  lines(outq[[2]][, 4][outq[[3]][4, ]], col = "blue", lwd = 2)
-  
-  
+  # Loop through each component (1 to 4) and plot with appropriate axis ticks and titles
+  for (i in 1:4) {
+    plot(vals[[4]][i, ][outq[[3]][i, ]], 
+         xaxt = 's', yaxt = 's', # Auto-generate axis ticks
+         main = paste("Component", i), # Set the main title dynamically
+         xlab = "", ylab = "") # Optionally set axis labels
+    lines(outq[[2]][, i][outq[[3]][i, ]], col = "blue", lwd = 2) # Add trend line
+  }
 }
 
 # Plot scenario 7
