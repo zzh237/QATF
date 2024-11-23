@@ -160,17 +160,17 @@ png(filename = "overall_plot.png", width = 1100, height = 1000)
 par(mfrow = c(3, 3), mar = c(5, 6, 2, 2))
 # Plots
 n = nrow(Scaled_Centered)
-# res5 <- qatf_cv(t(Scaled_Centered[, 2:10]), Scaled_Centered[, 11], n, 9, 0.5, 0)
-# lambda5 <- res5$LAMBDAS[which.min(rev(res5$MEANS))]
-# outq <- fit_qatf(t(Scaled_Centered[, 2:10]), Scaled_Centered[, 11], n, 9, 0.5, 0, lambda5)
-# 
-# res1 <- qatf_cv(t(Scaled_Centered[, 2:10]), Scaled_Centered[, 11], n, 9, 0.1, 0)
-# lambda1 <- res1$LAMBDAS[which.min(rev(res1$MEANS))]
-# outq1 <- fit_qatf(t(Scaled_Centered[, 2:10]), Scaled_Centered[, 11], n, 9, 0.1, 0, lambda1)
-# 
-# res9 <- qatf_cv(t(Scaled_Centered[, 2:10]), Scaled_Centered[, 11], n, 9, 0.9, 0)
-# lambda9 <- res9$LAMBDAS[which.min(rev(res9$MEANS))]
-# outq9 <- fit_qatf(t(Scaled_Centered[, 2:10]), Scaled_Centered[, 11], n, 9, 0.9, 0, lambda9)
+res5 <- qatf_cv(t(Scaled_Centered[, 2:10]), Scaled_Centered[, 11], n, 9, 0.5, 0)
+lambda5 <- res5$LAMBDAS[which.min(rev(res5$MEANS))]
+outq <- fit_qatf(t(Scaled_Centered[, 2:10]), Scaled_Centered[, 11], n, 9, 0.5, 0, lambda5)
+
+res1 <- qatf_cv(t(Scaled_Centered[, 2:10]), Scaled_Centered[, 11], n, 9, 0.1, 0)
+lambda1 <- res1$LAMBDAS[which.min(rev(res1$MEANS))]
+outq1 <- fit_qatf(t(Scaled_Centered[, 2:10]), Scaled_Centered[, 11], n, 9, 0.1, 0, lambda1)
+
+res9 <- qatf_cv(t(Scaled_Centered[, 2:10]), Scaled_Centered[, 11], n, 9, 0.9, 0)
+lambda9 <- res9$LAMBDAS[which.min(rev(res9$MEANS))]
+outq9 <- fit_qatf(t(Scaled_Centered[, 2:10]), Scaled_Centered[, 11], n, 9, 0.9, 0, lambda9)
   
 for (i in 1:9) {
   # Generate the plot
@@ -184,6 +184,7 @@ for (i in 1:9) {
   x_original <- seq(0, 1, length.out = 5) * (max_vals[i] - min_vals[i]) + min_vals[i]
   axis(1, at = x_range, labels = round(x_original, 2))
     
+  # Comment out these lines for adaptive labels 
   y_range <- c(4, 5, 6, 7)
   axis(2, at = y_range, labels = y_range) 
     

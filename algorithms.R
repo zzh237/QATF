@@ -393,6 +393,84 @@ qatf_cv <- function(x, y, n, d, tau, k, alpha = 10**-4, nfolds = 5, max_t = 50, 
   return(list("MEANS" = lambda_res, "LAMBDAS" = lambda_list))
   
 } 
+
+qass_cv <- function(x, y, n, d, tau, k, alpha = 10**-4, nfolds = 5, max_t = 50, prints = FALSE){
+  # Evaluates QASS for a range of lambdas via CV with the Check Function
+  # Predictions are constructed via 1-NN
+  # May choose to pass this in as an argument 
+  folds <- sample(rep(1:nfolds, length.out = n))
+  
+  x_sep <- vector("list", nfolds)
+  y_sep <- vector("list", nfolds)
+  ord_sep <- vector("list", nfolds)
+  
+  for (fold in 1:nfolds) {
+    train_idx <- which(folds != fold)
+    x_sep[[fold]] <- x[, train_idx]
+    y_sep[[fold]] <- y[train_idx]
+    
+    ord_sep[[fold]] <- matrix(NA, nrow = nrow(x_sep[[fold]]), ncol = ncol(x_sep[[fold]]))
+    for (j in 1:nrow(x)) { 
+      # breakdown of indexing here is easier to follow in other algorithms
+      ord_sep[[fold]][j, ] <- order(x_sep[[fold]] [j, ])
+      x_sep[[fold]][j, ] <- x_sep[[fold]][j, ][ord_sep[[fold]][j, ]]
+    }
+  }
+  
+  
+  lambda_list <- 10**seq(3 + k, -2 + k, length.out=50)
+  lambda_res <- numeric(50)
+  
+  
+  lambda_i <- 1
+  for (lambda in lambda_list) {
+    cv_mean <- numeric(nfolds)
+    
+    for (fold in 1:nfolds) {
+      fold_n <- ncol(x_sep[[fold]])
+      s_trend_list <- as.data.frame(matrix(0, nrow = fold_n, ncol = d)) 
+      
+      s_trend_hat_prev <- rep(0, times = fold_n)
+      t <- 1
+      repeat {
+        for (j in 1:d){
+          # calculate jth partial residual using components not equal to j
+          if (d == 2) {resp <-  y_sep[[fold]] - as.numeric(s_trend_list[, -j])}
+          else {resp <-  y_sep[[fold]] - as.numeric(t(rowSums(s_trend_list[, -j])))}
+          
+          # order inputs
+          fit <- qsreg(x_sep[[fold]][j, ], resp[ord_sep[[fold]][j, ]], lam = lambda, alpha = tau)$fitted.values
+          # unorder fit
+          s_trend_list[, j] <- fit[order(ord_sep[[fold]][j, ])]
+        }
+        
+        s_trend_hat <- rowSums(s_trend_list)
+        
+        if (all((abs(s_trend_hat - s_trend_hat_prev) <= alpha))) {break}
+        else if (t >= max_t) {break}
+        
+        s_trend_hat_prev <- s_trend_hat
+        t <- t + 1
+      }
+      
+      test_idx <- which(folds == fold)
+      cv_mean[fold] <- mean(check(y[test_idx] - predict_fit(t(x_sep[[fold]]), s_trend_hat, t(x[, test_idx]), method = "1-NN"), tau))
+      if (prints) {cat("\tPrediction mean check of fold ", fold, " is ", cv_mean[fold], " \n", sep = "")}
+    }
+    
+    lambda_res[lambda_i] <- mean(cv_mean) 
+    if (prints) {cat("lambda of ", lambda, " achieved ", nfolds, "-fold CV mean check of ",
+                     lambda_res[lambda_i], " \n", sep = "")}
+    lambda_i <- lambda_i + 1
+    
+  }
+  return(list("MEANS" = lambda_res, "LAMBDAS" = lambda_list))
+  
+} 
+
+
+
+
   
 
 
