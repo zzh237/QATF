@@ -32,6 +32,8 @@ Scaled_Centered <- Combined_dat %>%
   mutate(across(2:10, ~ (. - min_vals[cur_column()]) / (max_vals[cur_column()] - min_vals[cur_column()]))) %>%
   mutate(Ladder.score = Ladder.score - mean(Ladder.score, na.rm = TRUE))
 
+splits <- sample(rep(1:10, length.out = nrow(Scaled_Centered)))
+
 
 ########
 # QATF #
@@ -41,8 +43,6 @@ Scaled_Centered <- Combined_dat %>%
 num_cores <- detectCores() - 1  # Use all cores except one
 cl <- makeCluster(num_cores)
 registerDoParallel(cl)
-
-splits <- sample(rep(1:10, length.out = nrow(Scaled_Centered)))
 
 # Parallel loop using foreach
 results <- foreach(i = 1:10) %dopar% {
@@ -182,8 +182,6 @@ cat("Average MSE: ", mean_mse, "\n",
 num_cores <- detectCores() - 1  # Use all cores except one
 cl <- makeCluster(num_cores)
 registerDoParallel(cl)
-
-splits <- sample(rep(1:10, length.out = nrow(Scaled_Centered)))
 
 # Parallel loop using foreach
 results <- foreach(i = 1:10) %dopar% {
