@@ -20,12 +20,12 @@ Combined_dat <- read.csv("happiness/Combined_dat.csv")
 
 min_vals <- Combined_dat %>%
   select(2:10) %>%
-  summarise(across(everything(), min, na.rm = TRUE)) %>%
+  summarise(across(everything(), \(x) min(x, na.rm = TRUE))) %>%
   unlist()
 
 max_vals <- Combined_dat %>%
   select(2:10) %>%
-  summarise(across(everything(), max, na.rm = TRUE)) %>%
+  summarise(across(everything(),  \(x) max(x, na.rm = TRUE))) %>%
   unlist()
 
 Scaled_Centered <- Combined_dat %>% 
