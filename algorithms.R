@@ -394,7 +394,7 @@ qatf_cv <- function(x, y, n, d, tau, k, alpha = 10**-4, nfolds = 5, max_t = 50, 
   
 } 
 
-qass_cv <- function(x, y, n, d, tau, k, alpha = 10**-4, nfolds = 5, max_t = 50, prints = FALSE){
+qass_cv <- function(x, y, n, d, tau, alpha = 10**-4, nfolds = 5, max_t = 50, prints = FALSE){
   # Evaluates QASS for a range of lambdas via CV with the Check Function
   # Predictions are constructed via 1-NN
   # May choose to pass this in as an argument 
