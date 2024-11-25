@@ -96,7 +96,7 @@ results <- foreach(i = 1:10) %dopar% {
   test_set_coverage8 <- mean(test_data[, 11] <= pred9 & test_data[, 11] >= pred1)
   test_set_coverage6 <- mean(test_data[, 11] <= pred8 & test_data[, 11] >= pred2)
   
-  
+  ### Sorting all 7 quantiles together ###
   # pred_matrix <- cbind(pred95, pred9, pred8, pred5, pred2, pred1, pred05)
   # pred_sorted <- t(apply(pred_matrix, 1, sort, decreasing = TRUE))
   # 
@@ -113,7 +113,8 @@ results <- foreach(i = 1:10) %dopar% {
   # test_set_coverage8_sorted <- mean(test_data[, 11] <= pred9_sorted & test_data[, 11] >= pred1_sorted)
   # test_set_coverage6_sorted <- mean(test_data[, 11] <= pred8_sorted & test_data[, 11] >= pred2_sorted)
   
-  test_set_mean_sorted <- MSE(pred5_sorted, test_data[, 11])
+  ### Sorting quantile pairs only ###
+  test_set_mean_sorted <- test_set_mean
   test_set_coverage9_sorted <- mean(test_data[, 11] <= max(pred05, pred95) & test_data[, 11] >= min(pred05, pred95))
   test_set_coverage8_sorted <- mean(test_data[, 11] <= max(pred1, pred9) & test_data[, 11] >= min(pred1, pred9))
   test_set_coverage6_sorted <- mean(test_data[, 11] <= max(pred2, pred8) & test_data[, 11] >= min(pred2, pred8))
@@ -236,9 +237,10 @@ results <- foreach(i = 1:10) %dopar% {
   test_set_coverage6 <- mean(test_data[, 11] <= pred8 & test_data[, 11] >= pred2)
   
   
+  ### Sorting all 7 quantiles together ###
   # pred_matrix <- cbind(pred95, pred9, pred8, pred5, pred2, pred1, pred05)
   # pred_sorted <- t(apply(pred_matrix, 1, sort, decreasing = TRUE))
-  # 
+  
   # pred95_sorted <- pred_sorted[, 1]
   # pred9_sorted  <- pred_sorted[, 2]
   # pred8_sorted  <- pred_sorted[, 3]
@@ -252,7 +254,8 @@ results <- foreach(i = 1:10) %dopar% {
   # test_set_coverage8_sorted <- mean(test_data[, 11] <= pred9_sorted & test_data[, 11] >= pred1_sorted)
   # test_set_coverage6_sorted <- mean(test_data[, 11] <= pred8_sorted & test_data[, 11] >= pred2_sorted)
   
-  test_set_mean_sorted <- MSE(pred5_sorted, test_data[, 11])
+  ### Sorting quantile pairs only ###
+  test_set_mean_sorted <- test_set_mean
   test_set_coverage9_sorted <- mean(test_data[, 11] <= max(pred05, pred95) & test_data[, 11] >= min(pred05, pred95))
   test_set_coverage8_sorted <- mean(test_data[, 11] <= max(pred1, pred9) & test_data[, 11] >= min(pred1, pred9))
   test_set_coverage6_sorted <- mean(test_data[, 11] <= max(pred2, pred8) & test_data[, 11] >= min(pred2, pred8))
