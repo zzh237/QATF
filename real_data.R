@@ -33,6 +33,7 @@ Scaled_Centered <- Combined_dat %>%
   mutate(Ladder.score = Ladder.score - mean(Ladder.score, na.rm = TRUE))
 
 splits <- sample(rep(1:10, length.out = nrow(Scaled_Centered)))
+write.csv(data.frame(Split = splits), file = "splits.csv", row.names = FALSE)
 
 
 ########
@@ -161,8 +162,6 @@ average_metrics <- data.frame(
             mean_mse_sorted, mean_coverage9_sorted, mean_coverage8_sorted, mean_coverage6_sorted)
 )
 write.csv(average_metrics, "average_metrics.csv", row.names = FALSE)
-
-write.csv(data.frame(Split = splits), file = "splits.csv", row.names = FALSE)
 lambda_df <- data.frame(Lambda5 = sapply(results, function(x) x$lambda5), 
                         Lambda1 = sapply(results, function(x) x$lambda1),
                         Lambda9 = sapply(results, function(x) x$lambda9))
@@ -302,8 +301,6 @@ average_metrics <- data.frame(
             mean_mse_sorted, mean_coverage9_sorted, mean_coverage8_sorted, mean_coverage6_sorted)
 )
 write.csv(average_metrics, "average_metrics_s.csv", row.names = FALSE)
-
-write.csv(data.frame(Split = splits), file = "splits_s.csv", row.names = FALSE)
 lambda_df <- data.frame(Lambda5 = sapply(results, function(x) x$lambda5), 
                         Lambda1 = sapply(results, function(x) x$lambda1),
                         Lambda9 = sapply(results, function(x) x$lambda9))
