@@ -418,7 +418,7 @@ qass_cv <- function(x, y, n, d, tau, alpha = 10**-4, nfolds = 5, max_t = 50, pri
   }
   
   
-  lambda_list <- 10**seq(0, -10, length.out=50)
+  lambda_list <- 10**seq(0, -12, length.out=50)
   lambda_res <- numeric(50)
   
   
