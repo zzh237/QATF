@@ -33,7 +33,7 @@ Scaled_Centered <- Combined_dat %>%
 
 splits <- sample(rep(1:10, length.out = nrow(Scaled_Centered)))
 
-num <- 2
+num <- 10
 test_set_mean <- numeric(num)
 test_set_coverage9 <- numeric(num)
 test_set_coverage8 <- numeric(num)
@@ -44,7 +44,7 @@ test_set_coverage9_sorted <- numeric(num)
 test_set_coverage8_sorted <- numeric(num)
 test_set_coverage6_sorted <- numeric(num)
 
-for (i in 1:num) {
+for (i in 1:10) {
   source("algorithms.R")
   
   test_indices <- which(splits == i)
@@ -128,11 +128,6 @@ average_metrics <- data.frame(
             mean(test_set_mean_sorted), mean(test_set_coverage9_sorted), mean(test_set_coverage8_sorted), mean(test_set_coverage6_sorted))
 )
 write.csv(average_metrics, "average_metrics_s_test.csv", row.names = FALSE)
-
-cat("Average MSE: ", mean_mse, "\n",
-    "Average Coverage (95% CI): ", mean_coverage9, "\n",
-    "Average Coverage (90% CI): ", mean_coverage8, "\n",
-    "Average Coverage (80% CI): ", mean_coverage6, "\n")
 
 
 
