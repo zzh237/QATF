@@ -174,67 +174,55 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1, nlambdas
 #run_custom_sce_simulations(500, 10, 0.5, 1, simulations = 2, method = "optimal")
 
 
-# Construct Table
+# Construct Table: Main paper experiments
+# Scenario 1, 2, 3, 4, 0, with tau 0.5
+# Scenario 4 with tau 0.2, 0.8
 {
   # Scenario 0
-  # cum_data <- data.frame()
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 0, simulations = 10))
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 0, simulations = 10))
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 0, simulations = 10))
-  # write.csv(cum_data, file = "scenario0_05.csv")
-  # Scenario 1
-  # cum_data <- data.frame()
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 1, simulations = 10))
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 1, simulations = 10))
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 1, simulations = 10))
-  # write.csv(cum_data, file = "scenario1_05.csv")
-  # # Scenario 2
-  # cum_data <- data.frame()
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 2, simulations = 10))
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 2, simulations = 10))
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 2, simulations = 10))
-  # write.csv(cum_data, file = "scenario2_05.csv")
-  # # Scenario 3
-  # cum_data <- data.frame()
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 3, simulations = 10))
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 3, simulations = 10))
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 3, simulations = 10))
-  # write.csv(cum_data, file = "scenario3_05.csv")
-  # # Scenario 4
-  # cum_data <- data.frame()
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 4, simulations = 10))
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 4, simulations = 10))
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 4, simulations = 10))
-  # write.csv(cum_data, file = "scenario4_05.csv")
-  # cum_data <- data.frame()
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.2, 4, simulations = 10))
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.2, 4, simulations = 10))
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.2, 4, simulations = 10))
-  # write.csv(cum_data, file = "scenario4_02.csv")
-  # cum_data <- data.frame()
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.8, 4, simulations = 10))
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.8, 4, simulations = 10))
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.8, 4, simulations = 10))
-  # write.csv(cum_data, file = "scenario4_08.csv")
-  # Scenario 5
   cum_data <- data.frame()
-  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 5, simulations = 10))
-  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 5, simulations = 10))
-  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 5, simulations = 10))
-  write.csv(cum_data, file = "scenario5_05.csv")
-  # cum_data <- data.frame()
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.2, 5, simulations = 10))
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.2, 5, simulations = 10))
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.2, 5, simulations = 10))
-  # write.csv(cum_data, file = "scenario5_02.csv")
-  # cum_data <- data.frame()
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.8, 5, simulations = 10))
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.8, 5, simulations = 10))
-  # cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.8, 5, simulations = 10))
-  # write.csv(cum_data, file = "scenario5_08.csv")
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 0, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 0, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 0, simulations = 10))
+  write.csv(cum_data, file = "scenario0_05.csv")
+  # Scenario 1
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 1, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 1, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 1, simulations = 10))
+  write.csv(cum_data, file = "scenario1_05.csv")
+  # # Scenario 2
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 2, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 2, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 2, simulations = 10))
+  write.csv(cum_data, file = "scenario2_05.csv")
+  # # Scenario 3
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 3, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 3, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 3, simulations = 10))
+  write.csv(cum_data, file = "scenario3_05.csv")
+  # # Scenario 4
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 4, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 4, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 4, simulations = 10))
+  write.csv(cum_data, file = "scenario4_05.csv")
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.2, 4, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.2, 4, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.2, 4, simulations = 10))
+  write.csv(cum_data, file = "scenario4_02.csv")
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.8, 4, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.8, 4, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.8, 4, simulations = 10))
+  write.csv(cum_data, file = "scenario4_08.csv")
 }
 
-# Supplementary Experiments 
+# Construct Table: Supplementary Experiments 
+# Scenario 5, 6 with tau 0.5
+# Scenario 1, 2, 3, 0, 5 with tau 0.2, 0.8
 {
   # Scenario 0
   cum_data <- data.frame()
@@ -268,13 +256,13 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1, nlambdas
   cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.8, 2, simulations = 10))
   cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.8, 2, simulations = 10))
   cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.8, 2, simulations = 10))
-  write.csv(cum_data, file = "scenario2_058.csv")
+  write.csv(cum_data, file = "scenario2_08.csv")
   # Scenario 3
   cum_data <- data.frame()
   cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.2, 3, simulations = 10))
   cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.2, 3, simulations = 10))
   cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.2, 3, simulations = 10))
-  write.csv(cum_data, file = "scenario3_08.csv")
+  write.csv(cum_data, file = "scenario3_02.csv")
   cum_data <- data.frame()
   cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.8, 3, simulations = 10))
   cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.8, 3, simulations = 10))
@@ -298,9 +286,9 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1, nlambdas
   write.csv(cum_data, file = "scenario5_08.csv")
   # Scenario 6
   cum_data <- data.frame()
-  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 5, simulations = 10))
-  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 5, simulations = 10))
-  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 5, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 6, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 6, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 6, simulations = 10))
   write.csv(cum_data, file = "scenario6_05.csv")
 }
 
