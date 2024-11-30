@@ -8,58 +8,7 @@ library(extraDistr)
 # construct plots withing
 # and return the true quantile fit, y_star_q, and the data, y
 # for tau = 0.5, y_star_q = y_star
-scenario0 <- function(n, d, tau, plots = FALSE) {
-  # Scenario 0
-  # g_0 is piecewise constant function alternating between 1 and -1, 
-  # at j + 2 breakpoints
-  # x drawn randomly from uniform distribution for each component
-  # f_0 <- a_j * piecewise_function - b_j with b_j such that mean(f_0) = 0 
-  # and a_j such that norm(f_0) = 1
-  
-  if (length(n) != 1 || length(d) != 1 || length(tau) != 1) {
-    stop("Scenario function is only suitable for a single scenario.\n
-          Please ensure inputs are each scalar values.")
-  }
-  
-  x_list <- matrix(NA, nrow = d, ncol = n)
-  y_list <- matrix(NA, nrow = d, ncol = n)
-  
-  piecewise_constant <- function(x, breakpoints, values) {
-    intervals <- findInterval(x, breakpoints)
-    return(values[intervals])
-  }
-  
-  for (j in 1:d) {
-    x_list[j, ] <- runif(n, 0, 1)
-    
-    # Define breakpoints for piecewise constant function
-    breakpoints <- seq(0, 1, length.out = j + 2)^2
-    values <- rep(c(1, -1), length.out = j + 1)  # alternating between 1 and -1
-    
-    # Piecewise constant function
-    g_0 <- piecewise_constant(x_list[j, ], breakpoints, values)
-    b_j <- mean(g_0)
-    a_j <- 1 / (norm(g_0 - b_j, type = "2") / sqrt(n))
-    y_list[j, ] <- a_j * g_0 - a_j * b_j
-    
-    if (plots) {
-      filename <- paste(getwd(), '/sce0_plot_', j, '.png', sep = '')
-      png(filename)
-      plot(y_list[j, ]~x_list[j, ], main = paste('Scenario 0 j =', j), xlab = 'x', ylab = 'y')
-      dev.off()
-    }
-  }
-  
-  # Sum of each column of y_list
-  y_star <- colSums(y_list)
-  
-  # T(3) errors
-  y <- y_star + rt(n, 3)
-  y_star_q <- y_star + qt(tau, 3)
-  
-  if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
-  return(list(x_list, y, y_star_q))
-}
+
 scenario1 <- function(n, d, tau, plots = FALSE) {
   # Scenario 1
   # g_0(x) <- sin(2*pi/(x + 0.1)**(j/10))
@@ -238,8 +187,159 @@ scenario4 <- function(n, d, tau, plots = FALSE) {
   if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
   return(list(x_list, y, y_star_q))
 }
-scenario5 <- function(n, d=3, tau, plots = FALSE) {
+scenario5 <- function(n, d, tau, plots = FALSE) {
   # Scenario 5
+  # g_0(x) <- sin(2*pi/(x + 0.1)**(j/10))
+  # x drawn randomly from uniform distribution for each component
+  # f_0 <- a_j*g_0 - b_j w/ b_j s.t. mean(f_0) = 0 and a_j s.t. norm(f_0) = 1
+  # y = f_0(x) + epsilon_i
+  # epsilon_i temporally dependent N(0, 1) errors
+  
+  if (length(n) != 1 || length(d) != 1 || length(tau) != 1) {
+    stop("Scenario function is only suitable for a single scenario.\n
+          Please ensure inputs are each scalar values.")
+  }
+  
+  x_list <- matrix(NA, nrow = d, ncol = n)
+  y_list <- matrix(NA, nrow = d, ncol = n)
+  
+  for (j in 1:d) {
+    x_list[j, ] <- runif(n, 0, 1)
+    
+    # Doppler-like
+    g_0 <- sin(2 * pi / (x_list[j, ] + 0.1)^(j / 10))
+    b_j <- mean(g_0)
+    a_j <- 1 / (norm(g_0 - b_j, type = "2") / sqrt(n))
+    y_list[j, ] <- a_j * g_0 - a_j * b_j
+    
+    if (plots) {
+      filename <- paste(getwd(), '/sce5_plot_', j, '.png', sep = '')
+      png(filename)
+      plot(y_list[j, ]~x_list[j, ], main = paste('Scenario 5 j =', j), xlab = 'x', ylab = 'y')
+      dev.off()
+    }
+  }
+  
+  # Sum of each column of y_list
+  y_star <- colSums(y_list)
+  
+  # Temporally Dependent Normal Errors
+  e <- numeric(n)
+  e[1] <- N(0, 1)
+  for (i in 2:n) {
+    e[i] <- 0.3 * e[i-1] + rnorm(1, 0, 1) / (sqrt(0.3^2 + 1^2))
+  }
+  y <- y_star + e * rt(n, 2)
+  y_star_q <- y_star + e * qt(tau, 2)
+  
+  if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
+  return(list(x_list, y, y_star_q))
+}
+scenario6 <- function(n, d, tau, plots = FALSE) {
+  # Scenario 6
+  # g_0(x) <- sin(2*pi/(x + 0.1)**(j/10))
+  # x drawn randomly from uniform distribution for each component
+  # f_0 <- a_j*g_0 - b_j w/ b_j s.t. mean(f_0) = 0 and a_j s.t. norm(f_0) = 1
+  # y = f_0(x) + epsilon_i
+  # epsilon_i temporally dependent t(2) errors
+  
+  if (length(n) != 1 || length(d) != 1 || length(tau) != 1) {
+    stop("Scenario function is only suitable for a single scenario.\n
+          Please ensure inputs are each scalar values.")
+  }
+  if (length(tau) != 0.5) {
+    warning("Scenario 6 can only construct true quantiles for tau = 0.5")
+  }
+  
+  x_list <- matrix(NA, nrow = d, ncol = n)
+  y_list <- matrix(NA, nrow = d, ncol = n)
+  
+  for (j in 1:d) {
+    x_list[j, ] <- runif(n, 0, 1)
+    
+    # Doppler-like
+    g_0 <- sin(2 * pi / (x_list[j, ] + 0.1)^(j / 10))
+    b_j <- mean(g_0)
+    a_j <- 1 / (norm(g_0 - b_j, type = "2") / sqrt(n))
+    y_list[j, ] <- a_j * g_0 - a_j * b_j
+    
+    if (plots) {
+      filename <- paste(getwd(), '/sce6_plot_', j, '.png', sep = '')
+      png(filename)
+      plot(y_list[j, ]~x_list[j, ], main = paste('Scenario 6 j =', j), xlab = 'x', ylab = 'y')
+      dev.off()
+    }
+  }
+  
+  # Sum of each column of y_list
+  y_star <- colSums(y_list)
+  
+  # Temporally Dependent t(2) errors
+  e <- numeric(n)
+  e[1] <- t(2)
+  for (i in 2:n) {
+    e[i] <- 0.5 * e[i-1] + t(2)
+  }
+  y <- y_star + e
+  y_star_q <- y_star
+  
+  return(list(x_list, y, y_star_q))
+}
+scenario0 <- function(n, d, tau, plots = FALSE) {
+  # Scenario 0
+  # g_0 is piecewise constant function alternating between 1 and -1, 
+  # at j + 2 breakpoints
+  # x drawn randomly from uniform distribution for each component
+  # f_0 <- a_j * piecewise_function - b_j with b_j such that mean(f_0) = 0 
+  # and a_j such that norm(f_0) = 1
+  
+  if (length(n) != 1 || length(d) != 1 || length(tau) != 1) {
+    stop("Scenario function is only suitable for a single scenario.\n
+          Please ensure inputs are each scalar values.")
+  }
+  
+  x_list <- matrix(NA, nrow = d, ncol = n)
+  y_list <- matrix(NA, nrow = d, ncol = n)
+  
+  piecewise_constant <- function(x, breakpoints, values) {
+    intervals <- findInterval(x, breakpoints)
+    return(values[intervals])
+  }
+  
+  for (j in 1:d) {
+    x_list[j, ] <- runif(n, 0, 1)
+    
+    # Define breakpoints for piecewise constant function
+    breakpoints <- seq(0, 1, length.out = j + 2)^2
+    values <- rep(c(1, -1), length.out = j + 1)  # alternating between 1 and -1
+    
+    # Piecewise constant function
+    g_0 <- piecewise_constant(x_list[j, ], breakpoints, values)
+    b_j <- mean(g_0)
+    a_j <- 1 / (norm(g_0 - b_j, type = "2") / sqrt(n))
+    y_list[j, ] <- a_j * g_0 - a_j * b_j
+    
+    if (plots) {
+      filename <- paste(getwd(), '/sce0_plot_', j, '.png', sep = '')
+      png(filename)
+      plot(y_list[j, ]~x_list[j, ], main = paste('Scenario 0 j =', j), xlab = 'x', ylab = 'y')
+      dev.off()
+    }
+  }
+  
+  # Sum of each column of y_list
+  y_star <- colSums(y_list)
+  
+  # T(3) errors
+  y <- y_star + rt(n, 3)
+  y_star_q <- y_star + qt(tau, 3)
+  
+  if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
+  return(list(x_list, y, y_star_q))
+}
+
+scenarioplot1 <- function(n, d=3, tau, plots = FALSE) {
+  # Scenario 8
   # i <- 1:n
   # g_1(x) <- (cos(6*pi*x) + 0.1)
   # g_2(x) <- piecwise constant
@@ -254,7 +354,7 @@ scenario5 <- function(n, d=3, tau, plots = FALSE) {
           Please ensure inputs are each scalar values.")
   }
   if (d != 3) {
-    stop("Scenario 5 is specifically designed for d = 3")
+    stop("Scenario 8 is specifically designed for d = 3")
   }
   
   x_list <- matrix(NA, nrow = d, ncol = n)
@@ -276,9 +376,9 @@ scenario5 <- function(n, d=3, tau, plots = FALSE) {
     ord <- order(x_list[j, ])
     
     if (plots) {
-      filename <- paste(getwd(), '/sce5_plot_', j, '.png', sep = '')
+      filename <- paste(getwd(), '/sce8_plot_', j, '.png', sep = '')
       png(filename)
-      plot(y_list[j, ]~x_list[j, ], main = paste('Scenario 5 j =', j), xlab = 'x', ylab = 'y')
+      plot(y_list[j, ]~x_list[j, ], main = paste('Scenario 8 j =', j), xlab = 'x', ylab = 'y')
       dev.off()
     }
     else {
@@ -294,8 +394,8 @@ scenario5 <- function(n, d=3, tau, plots = FALSE) {
   if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
   return(list(x_list, y, y_star_q, y_list))
 }
-scenario6 <- function(n, d=4, tau, plots = FALSE) {
-  # Scenario 6
+scenarioplot2 <- function(n, d=4, tau, plots = FALSE) {
+  # Scenario 9
   # i <- 1:n
   # g_1(x) <- −(t−1/2)**2
   # g_2(x) <- heterogenous sin wave
@@ -311,7 +411,7 @@ scenario6 <- function(n, d=4, tau, plots = FALSE) {
           Please ensure inputs are each scalar values.")
   }
   if (d != 4) {
-    stop("Scenario 6 is specifically designed for d = 4")
+    stop("Scenario 9 is specifically designed for d = 4")
   }
   
   x_list <- matrix(NA, nrow = d, ncol = n)
@@ -334,9 +434,9 @@ scenario6 <- function(n, d=4, tau, plots = FALSE) {
     ord <- order(x_list[j, ])
     
     if (plots) {
-      filename <- paste(getwd(), '/sce6_plot_', j, '.png', sep = '')
+      filename <- paste(getwd(), '/sce9_plot_', j, '.png', sep = '')
       png(filename)
-      plot(y_list[j, ]~x_list[j, ], main = paste('Scenario 6 j =', j), xlab = 'x', ylab = 'y')
+      plot(y_list[j, ]~x_list[j, ], main = paste('Scenario 9 j =', j), xlab = 'x', ylab = 'y')
       dev.off()
     } else {
       plot(y_list[j, ][ord], col = "black", ylab = paste("Component ", j))
@@ -351,12 +451,12 @@ scenario6 <- function(n, d=4, tau, plots = FALSE) {
   if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
   return(list(x_list, y, y_star_q, y_list))
 }
-scenario7 <- function(n, d=2, tau, plots = FALSE) {
+scenarioplot3 <- function(n, d=2, tau, plots = FALSE) {
   if (length(n) != 1 || length(d) != 1 || length(tau) != 1) {
     stop("Scenario function is only suitable for a single scenario. Please ensure inputs are each scalar values.")
   }
   if (d != 2) {
-    stop("Scenario 7 is specifically designed for d = 2")
+    stop("Scenario 10 is specifically designed for d = 2")
   }
   
   x_list <- matrix(NA, nrow = d, ncol = n)
@@ -377,9 +477,9 @@ scenario7 <- function(n, d=2, tau, plots = FALSE) {
     ord[j, ] <- order(x_list[j, ])
     
     if (plots) {
-      filename <- paste(getwd(), '/sce7_plot_', j, '.png', sep = '')
+      filename <- paste(getwd(), '/sce10_plot_', j, '.png', sep = '')
       png(filename)
-      plot(y_list[j, ]~x_list[j, ], main = paste('Scenario 7 j =', j), xlab = 'x', ylab = 'y')
+      plot(y_list[j, ]~x_list[j, ], main = paste('Scenario 10 j =', j), xlab = 'x', ylab = 'y')
       dev.off()
     }
   }

@@ -234,14 +234,84 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1, nlambdas
   # write.csv(cum_data, file = "scenario5_08.csv")
 }
 
+# Supplementary Experiments 
+{
+  # Scenario 0
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.2, 0, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.2, 0, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.2, 0, simulations = 10))
+  write.csv(cum_data, file = "scenario0_02.csv")
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.8, 0, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.8, 0, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.8, 0, simulations = 10))
+  write.csv(cum_data, file = "scenario0_08.csv")
+  # Scenario 1
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.2, 1, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.2, 1, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.2, 1, simulations = 10))
+  write.csv(cum_data, file = "scenario1_02.csv")
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.8, 1, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.8, 1, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.8, 1, simulations = 10))
+  write.csv(cum_data, file = "scenario1_08.csv")
+  # Scenario 2
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.2, 2, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.2, 2, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.2, 2, simulations = 10))
+  write.csv(cum_data, file = "scenario2_02.csv")
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.8, 2, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.8, 2, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.8, 2, simulations = 10))
+  write.csv(cum_data, file = "scenario2_058.csv")
+  # Scenario 3
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.2, 3, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.2, 3, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.2, 3, simulations = 10))
+  write.csv(cum_data, file = "scenario3_08.csv")
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.8, 3, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.8, 3, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.8, 3, simulations = 10))
+  write.csv(cum_data, file = "scenario3_08.csv")
+  # Scenario 5
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 5, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 5, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 5, simulations = 10))
+  write.csv(cum_data, file = "scenario5_05.csv")
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.2, 5, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.2, 5, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.2, 5, simulations = 10))
+  write.csv(cum_data, file = "scenario5_02.csv")
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.8, 5, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.8, 5, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.8, 5, simulations = 10))
+  write.csv(cum_data, file = "scenario5_08.csv")
+  # Scenario 6
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_custom_sce_simulations( 500, 10, 0.5, 5, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 5, simulations = 10))
+  cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 5, simulations = 10))
+  write.csv(cum_data, file = "scenario6_05.csv")
+}
+
 
 ############################################
 # Next Code is for plots scenarios 5, 6, 7 # 
 ############################################
 
-# Plot scenario 5, all competitors
+# Plot scenario plot 1, all competitors
 {
-  vals <- scenario5(500, 3, 0.5)
+  vals <- scenarioplot1(500, 3, 0.5)
   # vals[[4]] is y_list, vals[[1]] is x_list
   # out[[2]] is trend_list, out[[3]] is permutation matrix
   
@@ -279,9 +349,9 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1, nlambdas
   lines(outq[[2]][, 3][outq[[3]][3, ]], col = "purple")
 }
 
-# Plot scenario 6, QATF only
+# Plot scenario plot 2, QATF only
 {
-  vals <- scenario6(1000, 4, 0.5)
+  vals <- scenarioplot2(1000, 4, 0.5)
   source("algorithms.R")
   # vals[[4]] is y_list, vals[[1]] is x_list
   # out[[2]] is trend_list, out[[3]] is permutation matrix
@@ -307,9 +377,9 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1, nlambdas
   }
 }
 
-# Plot scenario 7
+# Plot scenario plot 3
 {
-  vals <- scenario7(2500, 2, 0.5)
+  vals <- scenarioplot3(2500, 2, 0.5)
   # vals[[4]] is y_list, vals[[1]] is x_list
   # out[[2]] is trend_list, out[[3]] is permutation matrix
   
@@ -363,10 +433,12 @@ scenario1(500, 10, 0.5, TRUE)
 scenario2(500, 10, 0.5, TRUE)
 scenario3(500, 10, 0.5, TRUE)
 scenario4(500, 10, 0.5, TRUE)
+scenario5(500, 10, 0.5, TRUE)
+scenario6(500, 10, 0.5, TRUE)
 
-scenario5(500, 3, 0.5, TRUE)
-scenario6(500, 4, 0.5, TRUE)
-scenario7(500, 2, 0.5, TRUE)
+scenarioplot1(500, 3, 0.5, TRUE)
+scenarioplot2(500, 4, 0.5, TRUE)
+scenarioplot3(500, 2, 0.5, TRUE)
 
 # Run this in R terminal to remove all generated plots
 # system("rm sce[0-9]_plot*")
