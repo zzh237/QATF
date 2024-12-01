@@ -225,12 +225,12 @@ scenario5 <- function(n, d, tau, plots = FALSE) {
   
   # Temporally Dependent Normal Errors
   e <- numeric(n)
-  e[1] <- N(0, 1)
+  e[1] <- rnorm(1, 0, 1)
   for (i in 2:n) {
     e[i] <- 0.3 * e[i-1] + rnorm(1, 0, 1) / (sqrt(0.3^2 + 1^2))
   }
-  y <- y_star + e * rt(n, 2)
-  y_star_q <- y_star + e * qt(tau, 2)
+  y <- y_star + e
+  y_star_q <- y_star + e * qnorm(tau, 0, 1)
   
   if (tau != 0.5) { warning("Tau != 0.5. Only use output for QATF!")}
   return(list(x_list, y, y_star_q))
@@ -276,11 +276,12 @@ scenario6 <- function(n, d, tau, plots = FALSE) {
   
   # Temporally Dependent t(2) errors
   e <- numeric(n)
-  e[1] <- t(2)
+  e[1] <- rt(1, 2)
   for (i in 2:n) {
-    e[i] <- 0.5 * e[i-1] + t(2)
+    e[i] <- 0.5 * e[i-1] + rt(1, 2)
   }
   y <- y_star + e
+  # Only works for median case, so qt(0.5, 2) = 0
   y_star_q <- y_star
   
   return(list(x_list, y, y_star_q))
