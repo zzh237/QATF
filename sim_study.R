@@ -42,8 +42,7 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1, nlambdas
     else if (sce == 4) {vals <- scenario4(n, d, tau)}
     else if (sce == 5) {vals <- scenario5(n, d, tau)}
     else if (sce == 6) {vals <- scenario6(n, d, tau)}
-    else if (sce == 7) {vals <- scenario6(n, d, tau)}
-    else {stop("Only 0-7 scenarios at the time of this functions' construction")}
+    else {stop("Only 0-6 scenarios at the time of this functions' construction")}
     
     if (save) { saveRDS(vals, file = paste0("sce_", sce, "_simulation_", i, ".txt"))}
     
