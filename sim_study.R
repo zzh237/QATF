@@ -4,9 +4,6 @@
 source("scenarios.R")
 source("algorithms.R")
 
-vals <- scenario2(500, 10, 0.5)
-lambda_res <- get_mse_s_qgam(vals[[1]], vals[[2]], vals[[3]], 0.5)
-
 # This is a wrapper function, 
 # calling the appropriate scenario
 # the appropriate algorithm(s)
@@ -242,7 +239,7 @@ run_qgam_sce_simulations <- function(n, d, tau, sce, simulations = 1, nlambdas =
   
 }
 
-#run_custom_sce_simulations(500, 10, 0.5, 1, simulations = 2, method = "optimal")
+# run_qgam_sce_simulations(500, 10, 0.5, 1, simulations = 1)
 
 
 # Construct Table: Main paper experiments
@@ -364,6 +361,8 @@ run_qgam_sce_simulations <- function(n, d, tau, sce, simulations = 1, nlambdas =
 }
 
 # Construct Table:qgam method only
+# Scenario 1-5, tau 0.2, 0.8, 0.5
+# Scenario 6, tau 0.5 only
 {
   # Scenario 0
   cum_data <- data.frame()
