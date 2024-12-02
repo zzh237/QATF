@@ -8,6 +8,7 @@ library(fields)
 library(tidyverse)
 library(FNN)
 library(e1071)
+library(qgam)
 
 
 MSE <- function(a, b){
@@ -116,6 +117,44 @@ get_mse_s <- function(x, y, y_star, n, d, tau, alpha = 10**-4, max_t = 50, print
     }
     
     lambda_res[lambda_i] <- MSE(y_star, s_trend_hat) 
+    if (prints) {cat("lambda of ", lambda, " achieved true MSE of ", lambda_res[lambda_i], "\n")}
+    
+    lambda_i <- lambda_i + 1
+  }
+  if(plots) {
+    # Basic plot with log scale on x-axis
+    plot(lambda_list, lambda_res, log="x", 
+         xlab="Lambda (log scale)", ylab="MSE", main="Ablation Plot QSS")
+    
+  }
+  return(list("MSES" = lambda_res, "LAMBDAS" = lambda_list))
+}
+get_mse_s_qgam <- function(x, y, y_star, tau, prints = TRUE, plots = FALSE) {
+  lambda_list <- 10**seq(0, -16, length.out=50)
+  lambda_res <- numeric(50)
+  print(dim(x))
+  
+  lambda_i <- 1
+  data <- data.frame(x1 = x[1,], x2 = x[2,], x3 = x[3,], x4 = x[4,],
+                     x5 = x[5,], x6 = x[6,], x7 = x[7,], x8 = x[8,], 
+                     x9 = x[9,], x10 = x[10,], y = y)
+  
+  for (lambda in lambda_list) {
+    fit <- qgam(
+      y ~ s(x1, bs = "cr", sp = lambda) + 
+        s(x2, bs = "cr", sp = lambda) + 
+        s(x3, bs = "cr", sp = lambda) + 
+        s(x4, bs = "cr", sp = lambda) + 
+        s(x5, bs = "cr", sp = lambda) + 
+        s(x6, bs = "cr", sp = lambda) + 
+        s(x7, bs = "cr", sp = lambda) + 
+        s(x8, bs = "cr", sp = lambda) + 
+        s(x9, bs = "cr", sp = lambda) + 
+        s(x10, bs = "cr", sp = lambda),
+      data = data,
+      qu = tau  
+    )
+    lambda_res[lambda_i] <- MSE(y_star, fitted(fit)) 
     if (prints) {cat("lambda of ", lambda, " achieved true MSE of ", lambda_res[lambda_i], "\n")}
     
     lambda_i <- lambda_i + 1

@@ -4,6 +4,9 @@
 source("scenarios.R")
 source("algorithms.R")
 
+vals <- scenario2(500, 10, 0.5)
+lambda_res <- get_mse_s_qgam(vals[[1]], vals[[2]], vals[[3]], 0.5)
+
 # This is a wrapper function, 
 # calling the appropriate scenario
 # the appropriate algorithm(s)
@@ -170,6 +173,75 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1, nlambdas
   
 }
 
+run_qgam_sce_simulations <- function(n, d, tau, sce, simulations = 1, nlambdas = 50, 
+                                       method = "min_lambda", save = FALSE) {
+  if (!(method == "min_lambda" || method == "optimal")) {
+    stop("method can be \"min_lambda\" (default) or \"optimal\"")
+  }
+  
+  warning("This is a redundant method, for running QS with qgam() package")
+  
+  QS_mat <- matrix(data = NA, nrow = simulations, ncol = nlambdas)
+  QS_MSE <- 0
+  
+  # TODO: make sure to save the output!
+  for (i in 1:simulations) {
+    if      (sce == 0) {vals <- scenario0(n, d, tau)}
+    else if (sce == 1) {vals <- scenario1(n, d, tau)}
+    else if (sce == 2) {vals <- scenario2(n, d, tau)}
+    else if (sce == 3) {vals <- scenario3(n, d, tau)}
+    else if (sce == 4) {vals <- scenario4(n, d, tau)}
+    else if (sce == 5) {vals <- scenario5(n, d, tau)}
+    else if (sce == 6) {vals <- scenario6(n, d, tau)}
+    else {stop("Only 0-6 scenarios at the time of this functions' construction")}
+    
+    if (save) { saveRDS(vals, file = paste0("sce_", sce, "_simulation_", i, ".txt"))}
+
+    ### Quantile Smoothing Splines ###
+    QS <- get_mse_s_qgam(vals[[1]], vals[[2]], vals[[3]], tau, prints = FALSE)
+    if (length(QS$MSES) != nlambdas) {stop("Inconsistent number of lambdas. Adjust nlambdas parameter (default 50)")}
+    QS_mat[i, ] <- QS$MSES
+    
+    QS_MSE <- QS_MSE + min(QS$MSES)
+    if (method == "optimal") {
+      cat("For simulation ", i, " The best mse for QS_qgam was ", min(QS$MSES), 
+          " at lambda = ", QS$LAMBDAS[which.min(QS$MSES)], "\n", sep = "")    
+    }
+    if (simulations != 1) {cat("finished simulation ", i, "\n")}
+  }
+  
+  
+  ### Optimal Handling ###
+  if (method == "optimal") {
+    QS_MSE <- QS_MSE / simulations
+    
+    return(data.frame(n = n,
+                      Scenario = sce,
+                      d = d,
+                      tau = tau,
+                      Simulations = simulations,
+                      Method = method, 
+                      QS_qgam = format(QS_MSE   , scientific = FALSE, digits = 6)))
+  }
+  
+  ### Min Lambda Handling ### 
+  else {
+    QS_MSE <- min(colMeans(QS_mat))
+    cat("Min lambda across ", simulations, " simulations for QS_qgam was ", QS$LAMBDAS[which.min(colMeans(QS_mat))], "\n", sep = "")
+
+    
+    return(data.frame(n = n,
+                      Scenario = sce,
+                      d = d,
+                      tau = tau,
+                      Simulations = simulations,
+                      Method = method, 
+                      QS_qgam = format(QS_MSE   , scientific = FALSE, digits = 6)))
+  }
+  
+  
+}
+
 #run_custom_sce_simulations(500, 10, 0.5, 1, simulations = 2, method = "optimal")
 
 
@@ -289,6 +361,88 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1, nlambdas
   cum_data <- rbind(cum_data, run_custom_sce_simulations(1000, 10, 0.5, 6, simulations = 10))
   cum_data <- rbind(cum_data, run_custom_sce_simulations(2500, 10, 0.5, 6, simulations = 10))
   write.csv(cum_data, file = "scenario6_05.csv")
+}
+
+# Construct Table:qgam method only
+{
+  # Scenario 0
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations( 500, 10, 0.2, 0, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations(1000, 10, 0.2, 0, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations(2500, 10, 0.2, 0, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations( 500, 10, 0.5, 0, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations(1000, 10, 0.5, 0, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations(2500, 10, 0.5, 0, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations( 500, 10, 0.8, 0, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations(1000, 10, 0.8, 0, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations(2500, 10, 0.8, 0, simulations = 10))
+  write.csv(cum_data, file = "scenario0_qgam.csv")
+  # Scenario 1
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations( 500, 10, 0.2, 1, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations(1000, 10, 0.2, 1, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations(2500, 10, 0.2, 1, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations( 500, 10, 0.5, 1, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations(1000, 10, 0.5, 1, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations(2500, 10, 0.5, 1, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations( 500, 10, 0.8, 1, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations(1000, 10, 0.8, 1, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations(2500, 10, 0.8, 1, simulations = 10))
+  write.csv(cum_data, file = "scenario1_qgam.csv")
+  # Scenario 1
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations( 500, 10, 0.2, 2, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations(1000, 10, 0.2, 2, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations(2500, 10, 0.2, 2, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations( 500, 10, 0.5, 2, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations(1000, 10, 0.5, 2, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations(2500, 10, 0.5, 2, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations( 500, 10, 0.8, 2, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations(1000, 10, 0.8, 2, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations(2500, 10, 0.8, 2, simulations = 10))
+  write.csv(cum_data, file = "scenario2_qgam.csv")
+  # Scenario 3
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations( 500, 10, 0.2, 3, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations(1000, 10, 0.2, 3, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations(2500, 10, 0.2, 3, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations( 500, 10, 0.5, 3, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations(1000, 10, 0.5, 3, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations(2500, 10, 0.5, 3, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations( 500, 10, 0.8, 3, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations(1000, 10, 0.8, 3, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations(2500, 10, 0.8, 3, simulations = 10))
+  write.csv(cum_data, file = "scenario3_qgam.csv")
+  # Scenario 4
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations( 500, 10, 0.2, 4, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations(1000, 10, 0.2, 4, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations(2500, 10, 0.2, 4, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations( 500, 10, 0.5, 4, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations(1000, 10, 0.5, 4, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations(2500, 10, 0.5, 4, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations( 500, 10, 0.8, 4, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations(1000, 10, 0.8, 4, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations(2500, 10, 0.8, 4, simulations = 10))
+  write.csv(cum_data, file = "scenario4_qgam.csv")
+  # Scenario 5
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations( 500, 10, 0.2, 5, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations(1000, 10, 0.2, 5, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations(2500, 10, 0.2, 5, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations( 500, 10, 0.5, 5, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations(1000, 10, 0.5, 5, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations(2500, 10, 0.5, 5, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations( 500, 10, 0.8, 5, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations(1000, 10, 0.8, 5, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations(2500, 10, 0.8, 5, simulations = 10))
+  write.csv(cum_data, file = "scenario5_qgam.csv")
+  # Scenario 6
+  cum_data <- data.frame()
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations( 500, 10, 0.5, 6, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations(1000, 10, 0.5, 6, simulations = 10))
+  cum_data <- rbind(cum_data, run_qgam_sce_simulations(2500, 10, 0.5, 6, simulations = 10))
+  write.csv(cum_data, file = "scenario6_qgam.csv")
 }
 
 
