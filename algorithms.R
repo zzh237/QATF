@@ -129,7 +129,7 @@ get_mse_s <- function(x, y, y_star, n, d, tau, alpha = 10**-4, max_t = 50, print
   }
   return(list("MSES" = lambda_res, "LAMBDAS" = lambda_list))
 }
-get_mse_s_qgam <- function(x, y, y_star, tau, prints = TRUE, plots = FALSE) {
+get_mse_s_qgam <- function(x, y, y_star, n, d, tau, prints = TRUE, plots = FALSE) {
   lambda_list <- 10**seq(0, -16, length.out=50)
   lambda_res <- numeric(50)
   
@@ -140,16 +140,16 @@ get_mse_s_qgam <- function(x, y, y_star, tau, prints = TRUE, plots = FALSE) {
   
   for (lambda in lambda_list) {
     fit <- qgam(
-      y ~ s(x1, bs = "cr", sp = lambda) + 
-        s(x2, bs = "cr", sp = lambda) + 
-        s(x3, bs = "cr", sp = lambda) + 
-        s(x4, bs = "cr", sp = lambda) + 
-        s(x5, bs = "cr", sp = lambda) + 
-        s(x6, bs = "cr", sp = lambda) + 
-        s(x7, bs = "cr", sp = lambda) + 
-        s(x8, bs = "cr", sp = lambda) + 
-        s(x9, bs = "cr", sp = lambda) + 
-        s(x10, bs = "cr", sp = lambda),
+      y ~ s(x1, bs="bs", m=c(3,2), sp = lambda) + 
+        s(x2, bs="bs", m=c(3,2), sp = lambda) + 
+        s(x3, bs="bs", m=c(3,2), sp = lambda) + 
+        s(x4, bs="bs", m=c(3,2), sp = lambda) + 
+        s(x5, bs="bs", m=c(3,2), sp = lambda) + 
+        s(x6, bs="bs", m=c(3,2), sp = lambda) + 
+        s(x7, bs="bs", m=c(3,2), sp = lambda) + 
+        s(x8, bs="bs", m=c(3,2), sp = lambda) + 
+        s(x9, bs="bs", m=c(3,2), sp = lambda) + 
+        s(x10, bs="bs", m=c(3,2), sp = lambda),
       data = data,
       qu = tau  
     )
