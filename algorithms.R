@@ -132,7 +132,6 @@ get_mse_s <- function(x, y, y_star, n, d, tau, alpha = 10**-4, max_t = 50, print
 get_mse_s_qgam <- function(x, y, y_star, tau, prints = TRUE, plots = FALSE) {
   lambda_list <- 10**seq(0, -16, length.out=50)
   lambda_res <- numeric(50)
-  print(dim(x))
   
   lambda_i <- 1
   data <- data.frame(x1 = x[1,], x2 = x[2,], x3 = x[3,], x4 = x[4,],

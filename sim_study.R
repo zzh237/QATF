@@ -178,8 +178,8 @@ run_qgam_sce_simulations <- function(n, d, tau, sce, simulations = 1, nlambdas =
   
   warning("This is a redundant method, for running QS with qgam() package")
   
-  QS_mat <- matrix(data = NA, nrow = simulations, ncol = nlambdas)
-  QS_MSE <- 0
+  QS_qgam_mat <- matrix(data = NA, nrow = simulations, ncol = nlambdas)
+  QS_qgam_MSE <- 0
   
   # TODO: make sure to save the output!
   for (i in 1:simulations) {
@@ -195,14 +195,20 @@ run_qgam_sce_simulations <- function(n, d, tau, sce, simulations = 1, nlambdas =
     if (save) { saveRDS(vals, file = paste0("sce_", sce, "_simulation_", i, ".txt"))}
 
     ### Quantile Smoothing Splines ###
-    QS <- get_mse_s_qgam(vals[[1]], vals[[2]], vals[[3]], tau, prints = FALSE)
+    QS <- get_mse_s(vals[[1]], vals[[2]], vals[[3]], n, d, tau, prints = FALSE)
+    QS_qgam <- get_mse_s_qgam(vals[[1]], vals[[2]], vals[[3]], tau, prints = FALSE)
     if (length(QS$MSES) != nlambdas) {stop("Inconsistent number of lambdas. Adjust nlambdas parameter (default 50)")}
+    if (length(QS_qgam$MSES) != nlambdas) {stop("Inconsistent number of lambdas. Adjust nlambdas parameter (default 50)")}
     QS_mat[i, ] <- QS$MSES
+    QS_qgam_mat[i, ] <- QS_qgam$MSES
     
     QS_MSE <- QS_MSE + min(QS$MSES)
+    QS_qgam_MSE <- QS_qgam_MSE + min(QS_qgam$MSES)
     if (method == "optimal") {
-      cat("For simulation ", i, " The best mse for QS_qgam was ", min(QS$MSES), 
+      cat("For simulation ", i, " The best mse for QS was ", min(QS$MSES), 
           " at lambda = ", QS$LAMBDAS[which.min(QS$MSES)], "\n", sep = "")    
+      cat("For simulation ", i, " The best mse for QS_qgam was ", min(QS_qgam$MSES), 
+          " at lambda = ", QS_qgam$LAMBDAS[which.min(QS_qgam$MSES)], "\n", sep = "")  
     }
     if (simulations != 1) {cat("finished simulation ", i, "\n")}
   }
@@ -211,6 +217,7 @@ run_qgam_sce_simulations <- function(n, d, tau, sce, simulations = 1, nlambdas =
   ### Optimal Handling ###
   if (method == "optimal") {
     QS_MSE <- QS_MSE / simulations
+    QS_qgam_MSE <- QS_qgam_MSE / simulations
     
     return(data.frame(n = n,
                       Scenario = sce,
@@ -218,22 +225,26 @@ run_qgam_sce_simulations <- function(n, d, tau, sce, simulations = 1, nlambdas =
                       tau = tau,
                       Simulations = simulations,
                       Method = method, 
-                      QS_qgam = format(QS_MSE   , scientific = FALSE, digits = 6)))
+                      QS = format(QS_MSE   , scientific = FALSE, digits = 6),
+                      QS_qgam = format(QS_qgam_MSE, scientific = FALSE, digits = 6)))
   }
   
   ### Min Lambda Handling ### 
   else {
     QS_MSE <- min(colMeans(QS_mat))
-    cat("Min lambda across ", simulations, " simulations for QS_qgam was ", QS$LAMBDAS[which.min(colMeans(QS_mat))], "\n", sep = "")
-
+    QS_qgam_MSE <- min(colMeans(QS_qgam_mat))
+    cat("Min lambda across ", simulations, " simulations for QS was ", QS$LAMBDAS[which.min(colMeans(QS_mat))], "\n", sep = "")
+    cat("Min lambda across ", simulations, " simulations for QS_qgam was ", QS_qgam$LAMBDAS[which.min(colMeans(QS_qgam_mat))], "\n", sep = "")
+    
     
     return(data.frame(n = n,
                       Scenario = sce,
                       d = d,
                       tau = tau,
                       Simulations = simulations,
-                      Method = method, 
-                      QS_qgam = format(QS_MSE   , scientific = FALSE, digits = 6)))
+                      Method = QS_qgam$LAMBDAS[which.min(colMeans(QS_qgam_mat))], 
+                      QS = format(QS_MSE   , scientific = FALSE, digits = 6),
+                      QS_qgam = format(QS_qgam_MSE, scientific = FALSE, digits = 6)))
   }
   
   
