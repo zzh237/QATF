@@ -196,7 +196,7 @@ run_qgam_sce_simulations <- function(n, d, tau, sce, simulations = 1, nlambdas =
 
     ### Quantile Smoothing Splines ###
     QS <- get_mse_s(vals[[1]], vals[[2]], vals[[3]], n, d, tau, prints = FALSE)
-    QS_qgam <- get_mse_s_qgam(vals[[1]], vals[[2]], vals[[3]], tau, prints = FALSE)
+    QS_qgam <- get_mse_s_qgam(vals[[1]], vals[[2]], vals[[3]], n, d, tau, prints = FALSE)
     if (length(QS$MSES) != nlambdas) {stop("Inconsistent number of lambdas. Adjust nlambdas parameter (default 50)")}
     if (length(QS_qgam$MSES) != nlambdas) {stop("Inconsistent number of lambdas. Adjust nlambdas parameter (default 50)")}
     QS_mat[i, ] <- QS$MSES
