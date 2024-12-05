@@ -130,7 +130,7 @@ get_mse_s <- function(x, y, y_star, n, d, tau, alpha = 10**-4, max_t = 50, print
   return(list("MSES" = lambda_res, "LAMBDAS" = lambda_list))
 }
 get_mse_s_qgam <- function(x, y, y_star, n, d, tau, prints = TRUE, plots = FALSE) {
-  lambda_list <- 10**seq(0, -16, length.out=50)
+  lambda_list <- 10**seq(1, -7, length.out=50)
   lambda_res <- numeric(50)
   
   lambda_i <- 1
