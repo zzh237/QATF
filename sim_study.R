@@ -176,10 +176,11 @@ run_qgam_sce_simulations <- function(n, d, tau, sce, simulations = 1, nlambdas =
     stop("method can be \"min_lambda\" (default) or \"optimal\"")
   }
   
-  warning("This is a redundant method, for running QS with qgam() package")
-  
   QS_qgam_mat <- matrix(data = NA, nrow = simulations, ncol = nlambdas)
   QS_qgam_MSE <- 0
+  
+  QS_mat <- matrix(data = NA, nrow = simulations, ncol = nlambdas)
+  QS_MSE <- 0
   
   # TODO: make sure to save the output!
   for (i in 1:simulations) {
