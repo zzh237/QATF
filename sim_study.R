@@ -10,11 +10,11 @@ source("algorithms.R")
 # and simulating specified times! 
 # The output is designed for building the data frame
 
-# method can be "min_lambda" (default) or "optimal" 
+# method can be "oracle" (default) or "optimal" 
 run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1, nlambdas = 50, 
-                                       method = "min_lambda", save = FALSE) {
-  if (!(method == "min_lambda" || method == "optimal")) {
-    stop("method can be \"min_lambda\" (default) or \"optimal\"")
+                                       method = "oracle", save = FALSE) {
+  if (!(method == "oracle" || method == "optimal")) {
+    stop("method can be \"oracle\" (default) or \"optimal\"")
   }
   
   # This function only exists for us to make constructing the data frame quicker
@@ -171,9 +171,9 @@ run_custom_sce_simulations <- function(n, d, tau, sce, simulations = 1, nlambdas
 }
 
 run_qgam_sce_simulations <- function(n, d, tau, sce, simulations = 1, nlambdas = 50, 
-                                       method = "min_lambda", save = FALSE) {
-  if (!(method == "min_lambda" || method == "optimal")) {
-    stop("method can be \"min_lambda\" (default) or \"optimal\"")
+                                       method = "oracle", save = FALSE) {
+  if (!(method == "oracle" || method == "optimal")) {
+    stop("method can be \"oracle\" (default) or \"optimal\"")
   }
   
   QS_qgam_mat <- matrix(data = NA, nrow = simulations, ncol = nlambdas)
