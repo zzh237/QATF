@@ -509,3 +509,4 @@ scenarioplot3 <- function(n, d=2, tau, plots = FALSE) {
   return(list(x_list, y, y_star_q, y_list))
 }
 
+scenario0(500, 2, 0.5, TRUE)
