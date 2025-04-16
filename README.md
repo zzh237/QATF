@@ -1,3 +1,3 @@
 # QATF
 
-V8 is the newest in the overleaf
+The main algorithms are present in algorithms.R
